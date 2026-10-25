@@ -1,0 +1,1087 @@
+<!doctype html>
+<html lang="es">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Dragones de la Patagonia</title>
+<meta name="theme-color" content="#141c2b">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Lilita+One&family=Nunito:wght@600;800&display=swap" rel="stylesheet">
+<style>
+/* Layout: escenario a pantalla completa, lienzo 16:9 centrado, menús flotando encima. Colores del Sol de Mayo + noche patagónica. */
+:root{
+  --noche:#141c2b; --panel:rgba(18,26,41,.95); --linea:#34465f; --texto:#f2efe6; --suave:#a9b6c8;
+  --celeste:#74acdf; --sol:#f6b40e; --fuego:#ff6a2b; --piedra:#1a2433;
+  --display:'Lilita One','Arial Rounded MT Bold',system-ui,sans-serif;
+  --cuerpo:'Nunito',system-ui,-apple-system,'Segoe UI',sans-serif;
+  color-scheme:dark;
+}
+[hidden]{display:none!important}
+html,body{height:100%}
+body{background:var(--noche);color:var(--texto);font-family:var(--cuerpo);overflow:hidden;margin:0;box-sizing:border-box;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:10px;}
+#stage{position:relative;height:100%;display:grid;place-items:center}
+#game{display:block;outline:none;border-radius:4px;box-shadow:0 10px 40px rgba(0,0,0,.45);touch-action:none;user-select:none;-webkit-user-select:none}
+.ov{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;overflow:auto;padding-block:12px}
+.panel{background:var(--panel);border:1px solid var(--linea);border-radius:6px;padding:22px 24px;width:100%;max-width:900px;box-sizing:border-box;margin:auto}
+.panel.chico{max-width:460px;text-align:center}
+.panel.medio{max-width:820px}
+h1,h2,h3{font-family:var(--display);font-weight:400;margin:0;text-wrap:balance;letter-spacing:.5px}
+h1{font-size:clamp(34px,6.5vw,64px);line-height:1;color:var(--sol);text-shadow:0 3px 0 #8a5a00}
+h2{font-size:clamp(24px,4vw,36px);color:var(--sol)}
+h3{font-size:22px;color:var(--texto);margin-bottom:6px}
+.sub{color:var(--suave);margin:8px 0 0;font-size:15px;line-height:1.45;max-width:62ch}
+.eyebrow{font-size:12px;letter-spacing:2px;text-transform:uppercase;color:var(--celeste);font-weight:800;margin-bottom:8px}
+.fila{display:flex;flex-wrap:wrap;gap:10px;margin-top:18px}
+.panel.chico .fila{justify-content:center}
+.btn{font-family:var(--display);font-size:20px;background:var(--sol);color:#2b1b00;border:0;border-radius:4px;padding:11px 22px;cursor:pointer}
+.btn:hover{filter:brightness(1.08)}
+.btn.alt{background:transparent;color:var(--texto);border:1px solid var(--linea)}
+.btn.chico{font-size:16px;padding:8px 14px}
+.btn:focus-visible,.card:focus-visible{outline:3px solid var(--celeste);outline-offset:2px}
+.ayuda{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px 20px;margin-top:18px;font-size:14px;color:var(--suave)}
+.ayuda b{color:var(--texto)}
+kbd{font-family:var(--cuerpo);font-weight:800;font-size:12px;border:1px solid var(--linea);border-bottom-width:2px;border-radius:3px;padding:1px 6px;color:var(--texto)}
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-top:16px}
+.card{background:#16202f;border:1px solid var(--linea);border-radius:4px;padding:8px;text-align:left;color:var(--texto);cursor:pointer;font-family:var(--cuerpo);display:flex;flex-direction:column;gap:4px;min-width:0}
+.card:hover,.card.sel{border-color:var(--sol)}
+.card canvas{width:100%;aspect-ratio:3/2;max-width:100%;border-radius:3px;display:block}
+.card .nom{font-family:var(--display);font-size:20px}
+.card .ani{font-size:12px;color:var(--celeste);font-weight:800;letter-spacing:.5px}
+.card .perk{font-size:13px;color:var(--suave);line-height:1.35}
+.card .perk b{color:var(--sol);font-weight:800}
+.tag{display:inline-block;background:var(--celeste);color:#0d2236;font-size:11px;font-weight:800;border-radius:3px;padding:1px 6px;margin-left:4px;vertical-align:2px;letter-spacing:.5px}
+.datos{display:grid;grid-template-columns:1fr auto;gap:5px 18px;margin:14px 0 0;text-align:left;font-variant-numeric:tabular-nums;font-size:14px}
+.datos span:nth-child(even){text-align:right;font-weight:800}
+.panel.chico .datos{max-width:280px;margin-inline:auto}
+.total{font-family:var(--display);font-size:38px;color:var(--texto);margin-top:10px;font-variant-numeric:tabular-nums}
+.clGrid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.35fr);gap:22px;margin-top:12px}
+@media (max-width:640px){.clGrid{grid-template-columns:minmax(0,1fr)}}
+.puesto{font-family:var(--display);font-size:22px;margin:0;color:var(--texto)}
+.podio{list-style:none;padding:0;margin:8px 0 0;display:flex;flex-wrap:wrap;gap:6px}
+.podio li{font-size:13px;font-weight:800;border:1px solid var(--linea);border-radius:3px;padding:3px 8px;color:var(--suave)}
+.podio li.yo{border-color:var(--sol);color:var(--sol)}
+.historia{background:var(--piedra);border:1px solid var(--linea);border-radius:4px;padding:16px 18px;min-width:0}
+.historia p{margin:0 0 12px;line-height:1.55;font-size:15px;color:#e4e0d4;max-width:62ch}
+.vida{color:#ff7d8a}
+.tbtn{position:absolute;border:2px solid rgba(255,255,255,.5);color:#fff;font-family:var(--display);cursor:pointer;touch-action:none;user-select:none;-webkit-user-select:none}
+#fireBtn{right:calc(10px + env(safe-area-inset-right,0px));bottom:calc(10px + env(safe-area-inset-bottom,0px));width:84px;height:84px;border-radius:50%;background:rgba(255,106,43,.75);font-size:18px}
+#pauseBtn{right:calc(10px + env(safe-area-inset-right,0px));top:calc(10px + env(safe-area-inset-top,0px));width:44px;height:44px;border-radius:4px;background:rgba(20,28,43,.6);font-size:16px}
+#muteBtn{position:absolute;left:calc(8px + env(safe-area-inset-left,0px));bottom:calc(8px + env(safe-area-inset-bottom,0px));background:rgba(20,28,43,.6);border:1px solid var(--linea);color:var(--suave);border-radius:4px;font-family:var(--cuerpo);font-weight:800;font-size:12px;padding:5px 9px;cursor:pointer}
+@media (prefers-reduced-motion:reduce){.btn{transition:none}}
+</style>
+
+<div id="stage">
+  <canvas id="game" width="960" height="540" aria-label="Juego Dragones de la Patagonia"></canvas>
+
+  <div class="ov" id="ovMenu">
+    <div class="panel">
+      <div class="eyebrow">Carrera aérea · 5 corredores · 5 pantallas</div>
+      <h1>Dragones de la Patagonia</h1>
+      <p class="sub">Capi el carpincho corre contra sus amigos, montados en dragones, desde el Fitz Roy hasta la meseta. Esquivá rocas, cóndores y piedras volcánicas que explotan en aros de fuego. Empezás con 3 vidas y cada pantalla que pasás te da una más. Al final de cada pantalla te contamos una historia de la Patagonia.</p>
+      <div class="ayuda">
+        <div><b>Mover:</b> <kbd>↑</kbd><kbd>↓</kbd><kbd>←</kbd><kbd>→</kbd> o <kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd><br>En el celu: tocá y arrastrá.</div>
+        <div><b>Poder:</b> <kbd>Espacio</kbd> usa el poder patagónico de tu personaje. Se recarga solo.</div>
+        <div><b>Puntos:</b> alfajor 50 · centro de un aro de fuego 100 · romper cosas 30 · llegar 1º 500. <kbd>P</kbd> pausa.</div>
+      </div>
+      <div class="fila">
+        <button class="btn" id="bJugar">Elegir personaje</button>
+      </div>
+      <p class="sub" id="recordTxt"></p>
+    </div>
+  </div>
+
+  <div class="ov" id="ovSelect" hidden>
+    <div class="panel">
+      <div class="eyebrow">Los otros cuatro corren en tu contra</div>
+      <h2>¿Quién corre?</h2>
+      <p class="sub">Cada uno tiene un poder distinto. Tocá una tarjeta para arrancar.</p>
+      <div class="cards" id="cards"></div>
+      <div class="fila"><button class="btn alt" id="bVolver">Volver</button></div>
+    </div>
+  </div>
+
+  <div class="ov" id="ovClear" hidden>
+    <div class="panel medio">
+      <div class="eyebrow" id="clEyebrow">Pantalla superada</div>
+      <h2 id="clTitulo">¡Pantalla 1 superada!</h2>
+      <div class="clGrid">
+        <div>
+          <p class="puesto" id="clPuesto"></p>
+          <ol class="podio" id="clPodio"></ol>
+          <div class="datos" id="clDatos"></div>
+          <div class="total" id="clTotal">0</div>
+        </div>
+        <section class="historia" aria-labelledby="hTitulo">
+          <div class="eyebrow" id="hEyebrow">Historia de la Patagonia</div>
+          <h3 id="hTitulo"></h3>
+          <p id="hTexto"></p>
+          <button class="btn alt chico" id="bEscuchar">Escuchar historia</button>
+        </section>
+      </div>
+      <div class="fila"><button class="btn" id="bSeguir">Seguir</button></div>
+    </div>
+  </div>
+
+  <div class="ov" id="ovPausa" hidden>
+    <div class="panel chico">
+      <h2>Pausa</h2>
+      <div class="fila"><button class="btn" id="bReanudar">Seguir jugando</button><button class="btn alt" id="bSalir">Salir al menú</button></div>
+    </div>
+  </div>
+
+  <div class="ov" id="ovFin" hidden>
+    <div class="panel chico">
+      <div class="eyebrow" id="finEyebrow">Fin del juego</div>
+      <h2 id="finTitulo">Se terminaron las vidas</h2>
+      <p class="sub" id="finSub" style="margin-inline:auto"></p>
+      <div class="total" id="finTotal">0</div>
+      <p class="sub" id="finRecord" style="margin-inline:auto"></p>
+      <div class="fila"><button class="btn" id="bOtra">Otra vez</button><button class="btn alt" id="bCambiar">Cambiar personaje</button></div>
+    </div>
+  </div>
+
+  <button class="tbtn" id="fireBtn" hidden aria-label="Poder">PODER</button>
+  <button class="tbtn" id="pauseBtn" hidden aria-label="Pausa">II</button>
+  <button id="muteBtn" aria-label="Sonido">Sonido: sí</button>
+</div>
+
+<script>
+(() => {
+'use strict';
+const W = 960, H = 540;
+const $ = s => document.querySelector(s);
+const cv = $('#game'), ctx = cv.getContext('2d');
+const rand = (a, b) => a + Math.random() * (b - a);
+const clamp = (v, a, b) => v < a ? a : v > b ? b : v;
+const hash = n => { const s = Math.sin(n * 127.1 + 311.7) * 43758.5453; return s - Math.floor(s); };
+const FONT = "'Lilita One','Arial Rounded MT Bold',system-ui,sans-serif";
+const MAX_VIDAS = 5;
+
+/* ---------- Personajes y poderes ---------- */
+const CHARS = [
+  { id:'capi',  nom:'Capi',  ani:'Carpincho', hero:true, dragon:'#3f9a72', dark:'#2a6a4f', belly:'#e8d27a',
+    pnom:'Viento patagónico', pdesc:'Una ráfaga que barre rocas, cóndores y piedras volcánicas.', cd:6 },
+  { id:'ping',  nom:'Pingo', ani:'Pingüino de Magallanes', dragon:'#4a76c4', dark:'#2e4f8d', belly:'#cfe0f5',
+    pnom:'Glaciar Perito Moreno', pdesc:'Congela todo lo que hay en pantalla y lo hace pedazos.', cd:10 },
+  { id:'guan',  nom:'Guana', ani:'Guanaco', dragon:'#c4553a', dark:'#8b3424', belly:'#f2c27a',
+    pnom:'Escupida de guanaco', pdesc:'Escupe rápido y seguido. Rompe lo que toca.', cd:1.1 },
+  { id:'zorro', nom:'Colo',  ani:'Zorro colorado', dragon:'#7b4fb0', dark:'#523278', belly:'#e7c6f0',
+    pnom:'Picardía del zorro', pdesc:'Se vuelve fantasma 3 segundos: nada lo toca.', cd:9 },
+  { id:'huemul',nom:'Huemul',ani:'Huemul', dragon:'#3b7f8f', dark:'#255663', belly:'#bfe3d0',
+    pnom:'Carga del huemul', pdesc:'Embiste hacia adelante rompiendo todo, hasta las columnas.', cd:8 },
+];
+
+/* ---------- Pantallas ---------- */
+const LEVELS = [
+  { key:'mont', nom:'Montañas', lugar:'Cerro Fitz Roy · El Chaltén, Santa Cruz', sky:['#5f9bd3','#bcd9ee','#f4e2c6'],
+    speed:290, len:9500, gap:520, groundH:46, ground:'#e3ebf0', ground2:'#b9c9d6', far:'#8ea4c2', mid:'#5e7393',
+    rock:'#6d7584', rockHi:'#a3acb9', col:['#5d6573','#848d9b'],
+    mix:{pillar:3,gate:2,rock:3,bird:2,coins:2,ring:2,bomb:1} },
+  { key:'lago', nom:'Lagos', lugar:'Lago Nahuel Huapi · Bariloche, Río Negro', sky:['#4b8ccc','#a5cfee','#e4f1f6'],
+    speed:320, len:10500, gap:490, groundH:30, water:['#3a7fae','#1d4f78'], far:'#7f97b8', mid:'#3f6f5a',
+    rock:'#5b5f66', rockHi:'#8b9098', col:['#4f5560','#6f7782'],
+    mix:{pillar:2,gate:2,rock:3,bird:1,coins:2,ring:3,bomb:2} },
+  { key:'bosq', nom:'Bosques', lugar:'Bosque de Arrayanes · Villa La Angostura, Neuquén', sky:['#5a8d84','#a6c9b2','#e9e1c2'],
+    speed:345, len:11500, gap:460, groundH:50, ground:'#3e5a2f', ground2:'#2c4122', far:'#5b8569', mid:'#2f5240',
+    rock:'#6a5a4a', rockHi:'#94826c', col:['#a0603a','#c98552'],
+    mix:{pillar:4,gate:3,rock:1,bird:1,coins:2,ring:2,bomb:2} },
+  { key:'ruta', nom:'Rutas', lugar:'Ruta Nacional 40 · Chubut', sky:['#5aa0d8','#b6daf0','#f2e6c8'],
+    speed:375, len:12500, gap:440, groundH:70, ground:'#c9b17b', ground2:'#a8915e', road:'#4a4a50', far:'#a7a9ba', mid:'#b59b66',
+    rock:'#8d7350', rockHi:'#b89a70', col:['#9b7a4f','#bd9a68'],
+    mix:{pillar:3,gate:2,rock:2,bird:2,coins:2,ring:2,bomb:3} },
+  { key:'desi', nom:'Desiertos', lugar:'Meseta patagónica · Bajo Caracoles, Santa Cruz', sky:['#e4834a','#f2b473','#f8deac'],
+    speed:405, len:13500, gap:420, groundH:54, ground:'#d9a066', ground2:'#b67a45', far:'#c98a62', mid:'#a5603d',
+    rock:'#8a4b2f', rockHi:'#b8704a', col:['#a3532f','#c9774b'],
+    mix:{pillar:3,gate:3,rock:2,bird:2,coins:1,ring:2,bomb:4} },
+];
+
+/* ---------- Historias (10 por pantalla; van rotando sin repetirse) ---------- */
+const H_ = (titulo, texto) => ({ titulo, texto });
+const HISTORIAS = [
+  [ // Montañas
+    H_('El cerro que humea','Hace muchísimo tiempo, los aónikenk, el pueblo tehuelche del sur, recorrían la estepa siguiendo a los guanacos. Desde lejos veían una montaña de granito con la punta casi siempre envuelta en nubes. Parecía que echaba humo, y por eso la llamaron Chaltén: la montaña que humea. Creían que era un volcán sagrado. En 1877 el perito Francisco Moreno le puso Fitz Roy, en honor al capitán del Beagle, el barco en el que viajó Charles Darwin. Hoy los dos nombres conviven, y el pueblo que está a sus pies se llama El Chaltén.'),
+    H_('La aguja de hielo','Al lado del Fitz Roy hay una aguja de granito finita y altísima: el Cerro Torre. El viento le pega tan fuerte que en la punta se forman unos hongos de hielo enormes, que parecen merengue. Es una de las montañas más difíciles de escalar del planeta. En 1959 un escalador italiano dijo que había llegado a la cima, pero nunca lo pudo demostrar. La primera subida que nadie discute fue en 1974. Desde entonces, escaladores de todo el mundo viajan a El Chaltén para intentarlo, y muchos se vuelven sin poder subir.'),
+    H_('El señor de los vientos','El cóndor andino es una de las aves voladoras más grandes del mundo: con las alas abiertas puede medir más de tres metros. Casi no aletea. Sube en círculos aprovechando el aire caliente que sale de las montañas y planea durante horas sin cansarse. Puede vivir más de cincuenta años. Para muchos pueblos de los Andes era un ave sagrada, una mensajera entre la tierra y el cielo. Si alguna vez ves una sombra grande pasando sobre las rocas, mirá para arriba: capaz que es él.'),
+    H_('Un mar de hielo','Detrás del Fitz Roy empieza el Campo de Hielo Patagónico Sur, una gran sábana de hielo que comparten la Argentina y Chile. Es la reserva de hielo más grande del mundo después de la Antártida y Groenlandia. De ese campo bajan decenas de glaciares, como ríos congelados que se mueven muy despacito hacia los lagos. Cuando un pedazo se rompe y cae al agua, suena como un trueno. Ese hielo guarda agua dulce de miles de años, por eso hay que cuidarlo.'),
+    H_('El ciervo del escudo','El huemul es un ciervo petiso y robusto que vive en las montañas y bosques de la cordillera. Los machos tienen cuernos que se bifurcan, como una letra Y. Es tan importante que aparece en el escudo de Chile, y en la Argentina fue declarado Monumento Natural Nacional, la protección más alta que puede tener un animal. Hoy quedan muy pocos, y por eso guardaparques y científicos los siguen y cuidan. Si ves uno, hay que mirarlo de lejos y en silencio.'),
+    H_('El viento que despeina árboles','En la Patagonia el viento sopla tan fuerte que a veces pasa los cien kilómetros por hora. Hay árboles que crecen torcidos, todos inclinados para el mismo lado, como si los hubieran peinado. Les dicen árboles bandera. Los pobladores cuentan que acá no se dice que hay viento, se dice que hoy está calmo cuando sopla apenas un poco. Por eso las casas viejas tienen paredes gruesas y ventanas chiquitas, y la gente aprendió a caminar medio inclinada.'),
+    H_('Un pueblo recién nacido','El Chaltén es uno de los pueblos más jóvenes de la Argentina: se fundó en 1985, al pie del Fitz Roy. Se creó en una zona de límite con Chile, para que la región tuviera gente viviendo y trabajando ahí. Al principio había muy pocas casas. Hoy llegan caminantes de todo el mundo, y lo llaman la Capital Nacional del Trekking, que quiere decir caminar por la montaña. Desde el pueblo salen senderos que llevan a lagunas turquesas y a miradores con vista a los glaciares.'),
+    H_('La aguja de un amigo','En 1952 una expedición francesa vino a intentar algo que nadie había logrado: subir al Fitz Roy. Antes de llegar a la montaña, uno de ellos, Jacques Poincenot, murió al cruzar un río. Sus compañeros siguieron, y Lionel Terray y Guido Magnone llegaron por primera vez a la cima. Para recordarlo, una de las agujas de granito que rodean al Fitz Roy se llama Aguja Poincenot. Así, cada vez que alguien mira esas montañas, también recuerda al amigo que no pudo llegar.'),
+    H_('El volcán y el cóndor','En Neuquén se levanta el volcán Lanín, con su cono perfecto cubierto de nieve. Para el pueblo mapuche es un lugar sagrado, y es tan querido que aparece en el escudo de la provincia. Una leyenda cuenta que hace mucho el volcán se enojó y la tierra empezó a temblar. La gente pidió ayuda, y un cóndor gigante bajó del cielo, voló hasta la cima y el volcán se calmó. Desde entonces, dicen, el cóndor cuida la montaña desde arriba.'),
+    H_('El glaciar que avanza','El glaciar Perito Moreno, cerca de El Calafate, es una pared de hielo de unos sesenta metros sobre el agua, alta como un edificio de veinte pisos. Su hielo avanza unos dos metros por día, pero en el frente se va rompiendo, así que casi no cambia de tamaño. Cada tanto avanza tanto que cierra un brazo del lago y forma un puente de hielo. El agua empuja y empuja hasta que un día el puente se rompe con un estruendo enorme, y la gente viaja de todos lados para verlo. Es uno de los espectáculos más impresionantes de la Patagonia.'),
+  ],
+  [ // Lagos
+    H_('La isla del tigre','Nahuel Huapi son palabras mapuche: nahuel quiere decir tigre, como le decían al yaguareté, y huapi quiere decir isla. O sea, el lago de la isla del tigre. En sus orillas vivían pueblos que pescaban, juntaban frutos y cruzaban la cordillera por pasos que solo ellos conocían. Y el lago guarda una leyenda: dicen que en sus aguas, que tienen más de cuatrocientos metros de profundidad, vive el Nahuelito, una criatura enorme de cuello largo. Muchos dicen que lo vieron, pero nadie le pudo sacar una buena foto.'),
+    H_('El regalo del perito','Francisco Moreno, al que todos llamaban el perito, que quiere decir experto, recorrió la Patagonia cuando casi nadie la conocía. Como premio por su trabajo, el gobierno le dio tierras junto al lago Nahuel Huapi. Pero en 1903 él las devolvió con un pedido: que fueran un parque para que todos pudieran disfrutarlas y nadie las destruyera. De ese regalo nació el Parque Nacional Nahuel Huapi, el primer parque nacional de la Argentina. Gracias a esa idea, hoy esos bosques y lagos siguen siendo de todos.'),
+    H_('La gente del otro lado','El nombre Bariloche viene de una palabra de los pueblos originarios, Vuriloche, que quiere decir gente del otro lado de la montaña. Así se llamaba a quienes vivían cruzando la cordillera, y también a un paso que se usaba para ir y venir de Chile. A principios del 1900, un comerciante llamado Carlos Wiederhold abrió un almacén a orillas del lago, y alrededor fue creciendo el pueblo. Por él, la ciudad se llama San Carlos de Bariloche.'),
+    H_('La montaña que truena','En el límite con Chile se levanta el cerro Tronador, un volcán apagado cubierto de glaciares. ¿Por qué se llama así? Porque desde sus paredes se desprenden bloques de hielo que caen por la ladera y hacen un ruido como de trueno, que retumba en todo el valle. Los visitantes se quedan en silencio esperando escucharlo. De sus glaciares sale el agua que forma ríos y lagos de la zona. Uno de ellos, el Ventisquero Negro, es oscuro porque arrastra tierra y piedras.'),
+    H_('El ciervo más chiquito','En los bosques húmedos que rodean a los lagos vive el pudú, el ciervo más chiquito del mundo. Mide apenas unos cuarenta centímetros de alto, más o menos como un perro mediano. Es tímido, camina despacito entre las cañas y los helechos, y cuando se asusta se queda quieto o se esconde rapidísimo. Los machos tienen unos cuernitos cortos y puntiagudos. Como su bosque es tan cerrado, muy poca gente lo ve. Si alguna vez tenés la suerte, no hagas ruido.'),
+    H_('Siete lagos y alguno más','Entre San Martín de los Andes y Villa La Angostura hay un camino famoso: la Ruta de los Siete Lagos. En el viaje se pasan el Lácar, el Machónico, el Falkner, el Villarino, el Escondido, el Correntoso y el Espejo. Pero los que la recorren cuentan muchos más, porque entre las montañas aparecen lagunas y espejos de agua por todos lados. En otoño los árboles se ponen rojos y amarillos, y el camino parece un cuadro pintado.'),
+    H_('Peces que vinieron de lejos','Las truchas que hoy hacen famosos a los ríos y lagos de la Patagonia no siempre estuvieron acá. A principios del 1900 las trajeron desde otros países y las soltaron en el agua. Se adaptaron tan bien que se multiplicaron, y ahora pescadores de todo el mundo vienen a buscarlas. Pero antes ya vivían peces de acá, como la perca y el puyén. Los guardaparques recuerdan que en muchos lugares hay que devolver los peces al agua, para que siga habiendo para todos.'),
+    H_('El Cuero del lago','Los mapuche cuentan que en algunos lagos y lagunas vive el Cuero, una criatura que parece un cuero de vaca estirado flotando en el agua, con bordes llenos de uñas. Dicen que si alguien se mete a nadar solo, el Cuero lo envuelve y se lo lleva al fondo. Las abuelas lo contaban a la noche, junto al fuego. Y la leyenda tenía un consejo escondido: el agua de los lagos de montaña es muy fría y profunda, así que nunca hay que nadar solo.'),
+    H_('El chocolate de la montaña','Bariloche es famosa por su chocolate. A mediados del 1900 llegaron a la ciudad inmigrantes europeos que sabían prepararlo, y abrieron las primeras fábricas y casas de chocolate. Hoy, caminando por el centro, se siente el olor dulce que sale de las vidrieras. Hay chocolate en rama, bombones, alfajores y hasta una fiesta del chocolate en Semana Santa. Y después de un día de nieve, una taza de chocolate caliente es casi obligatoria.'),
+    H_('La catedral de piedra','Cerca de Bariloche está el cerro Catedral. Se llama así porque sus picos de roca, filosos y en fila, recuerdan a las torres de una catedral antigua. En invierno se llena de nieve y se convierte en uno de los centros de esquí más grandes de Sudamérica. Llegan chicos y grandes a esquiar, a deslizarse en trineo o a hacer muñecos de nieve. Desde arriba se ven el lago Nahuel Huapi, las islas y las montañas de Chile.'),
+  ],
+  [ // Bosques
+    H_('El bosque color canela','En la península de Quetrihué, en Villa La Angostura, crece el Bosque de Arrayanes. Sus troncos son color canela, lisos y fríos al tacto, y algunos árboles tienen cientos de años. Quetrihué es una palabra mapuche que quiere decir lugar de arrayanes. Mucha gente cuenta que este bosque inspiró la película Bambi, pero es un mito. Lo que sí es verdad es lo importantes que son los árboles para los pueblos del lugar: más al norte, los pewenche, la gente del pewén, juntan desde siempre los piñones de la araucaria.'),
+    H_('El abuelo del bosque','En el Parque Nacional Los Alerces, en Chubut, vive un árbol que nació hace tanto que todavía no existía ninguna ciudad de la Argentina. Es el alerce milenario, y tiene unos dos mil seiscientos años. Los alerces crecen muy despacio, apenas un poquito por año, y pueden vivir más de tres mil años. Por eso el parque fue declarado Patrimonio de la Humanidad. Para llegar hasta el abuelo hay que cruzar un lago en lancha y caminar por el bosque en silencio.'),
+    H_('El regalo del pewén','Una leyenda mapuche cuenta que hace mucho hubo un invierno muy largo y la gente no tenía qué comer. Los pewenche miraban los piñones de la araucaria, pero creían que eran venenosos. Entonces apareció un anciano, enviado por Ngenechén, el gran espíritu, y les enseñó a hervirlos y tostarlos. Así descubrieron un alimento que los salvó. Desde ese día el pewén es un árbol sagrado, y cuando se juntan piñones se agradece y se deja una parte para los animales del bosque.'),
+    H_('El fósil viviente','En los bosques del sur vive un animalito que entra en la palma de una mano: el monito del monte. No es un mono, es un marsupial, como el canguro, y la mamá lleva a sus crías en una bolsa. Es tan antiguo que lo llaman fósil viviente, porque sus parientes más cercanos viven en Australia. Sale de noche a comer insectos y frutos, y en invierno guarda grasa en la cola y duerme durante semanas, como si hibernara.'),
+    H_('La nutria del río','En los ríos y lagos rodeados de bosque vive el huillín, una nutria de agua dulce. Nada rapidísimo, se zambulle para atrapar cangrejos y peces, y después sale a comer sobre una piedra. Hace sus cuevas entre las raíces de los árboles de la orilla. Hoy está en peligro de extinción, porque se cortaron muchos bosques de ribera y el agua se ensució. Cuidar los ríos limpios es también cuidar al huillín.'),
+    H_('El bosque que se pone rojo','En la cordillera crecen la lenga y el ñire, dos árboles parientes del coihue. A diferencia de él, cuando llega el otoño sus hojas cambian de color: primero amarillas, después naranjas y al final rojas como el fuego. Las laderas de las montañas parecen pintadas. Luego las hojas caen y en invierno el bosque queda desnudo, cubierto de nieve. En primavera vuelven a brotar verdecitas. Mucha gente viaja en abril y mayo solo para ver ese incendio de colores.'),
+    H_('El que golpea la madera','En el bosque a veces se escucha toc, toc, toc. Es el carpintero gigante, uno de los pájaros carpinteros más grandes del mundo. El macho tiene la cabeza roja con un copete, y la hembra la tiene negra con un rulito hacia adelante. Golpea los troncos con su pico fuerte para buscar larvas escondidas bajo la corteza, y también para hacer agujeros donde anidar. Esos huecos después los usan otros pájaros como casa.'),
+    H_('La caña que florece una vez','En el sotobosque crece la caña colihue, una especie de bambú. Pasa más de sesenta años sin florecer, y un día florece toda junta en una región entera, y después se seca. Sus semillas son un banquete para los ratones del bosque, que se multiplican muchísimo. A eso los pobladores le dicen ratada. Los mapuche usaban la colihue para hacer lanzas, techos y hasta instrumentos musicales, como la trutruka, una trompeta larguísima.'),
+    H_('Las pelotitas del coihue','En las ramas del coihue y de otros árboles del bosque crecen unas pelotitas naranjas, llenas de agujeritos, como esponjas. Son un hongo llamado llao llao. Los mapuche y tehuelches las comían, porque son dulces y se juntan en primavera. El hongo es tan conocido que le dio su nombre a la península Llao Llao, cerca de Bariloche, donde hay un hotel famoso. Si mirás bien las ramas de un bosque en primavera, capaz que encontrás algunas.'),
+    H_('El árbol sagrado','El canelo, que los mapuche llaman foye, es un árbol de hojas verdes y brillantes que crece en los bosques húmedos. Para el pueblo mapuche es sagrado: se usa en ceremonias importantes y está junto al rewe, un tronco tallado con escalones que la machi sube para comunicarse con los espíritus. Sus hojas y su corteza también se usan como remedio. Cuando un mapuche planta un canelo cerca de su casa, es como pedir protección para su familia.'),
+  ],
+  [ // Rutas
+    H_('Los galeses y el té','La Ruta 40 cruza Chubut, una tierra con una historia muy especial. En 1865 llegó al Golfo Nuevo un barco llamado Mimosa, con unos ciento cincuenta galeses que buscaban un lugar donde vivir y hablar su idioma. Los primeros tiempos fueron muy duros, y los tehuelches los ayudaron enseñándoles a cazar y a moverse por la estepa. Los galeses fundaron pueblos como Gaiman, Trelew y, al pie de la cordillera, Trevelin. Por eso hoy en Chubut podés tomar el té con torta galesa.'),
+    H_('Dos bandidos en Cholila','Cerca de la Ruta 40, en Cholila, Chubut, todavía está la cabaña donde vivieron dos de los bandidos más famosos del lejano oeste: Butch Cassidy y Sundance Kid. Escapando de la policía de Estados Unidos, llegaron a la Patagonia alrededor de 1901 y se hicieron pasar por tranquilos criadores de ganado. Los vecinos los conocían como buena gente. Unos años después se fueron de golpe, cuando los empezaron a buscar otra vez. Hoy su cabaña es un lugar que visitan los viajeros.'),
+    H_('La ruta más larga','La Ruta Nacional 40 es la más larga de la Argentina: tiene más de cinco mil kilómetros y cruza once provincias, desde Cabo Vírgenes, en Santa Cruz, hasta La Quiaca, en Jujuy. En el camino pasa por glaciares, desiertos, viñedos, salares y montañas. En Salta llega a su punto más alto, el Abra del Acay, a casi cinco mil metros de altura. Para muchos viajeros recorrerla entera es un sueño, en auto, en moto o hasta en bicicleta.'),
+    H_('La Trochita','Entre Esquel y El Maitén, en Chubut, todavía anda un tren a vapor de vías angostísimas: la Trochita, también llamada el Viejo Expreso Patagónico. Sus vías miden apenas setenta y cinco centímetros de ancho. Empezó a funcionar a mediados del siglo pasado para llevar lana, mercadería y gente por la estepa. Hoy es una atracción: la locomotora echa humo y silba, los vagones se calientan con salamandras a leña y el tren avanza tan despacio que se puede saludar a los que miran desde afuera.'),
+    H_('El tiempo de la esquila','En las estancias patagónicas, cuando llega el verano, es tiempo de esquila. Llegan las comparsas, grupos de esquiladores que viajan de estancia en estancia para cortar la lana de miles de ovejas. Trabajan rapidísimo, con tijeras o máquinas, y la lana sale entera, como un abrigo. Después se clasifica, se enfarda y viaja muy lejos para hacer ropa. Durante la esquila se comparte el mate, el asado y las historias al final del día.'),
+    H_('El voto de la escuela 18','En 1902 la Argentina y Chile discutían a qué país le correspondía el valle cordillerano donde vivían colonos galeses, cerca de Trevelin. Para decidir, se les preguntó a los mismos pobladores. Se juntaron en la escuela número 18 y votaron ser argentinos. Por eso la escuelita, que hoy es un museo, es un lugar muy importante para la historia del país. Cada 30 de abril, Trevelin recuerda ese día.'),
+    H_('El salto de Malacara','En 1884, un joven galés llamado John Evans recorría la cordillera con unos compañeros. En una pelea, su caballo, llamado Malacara, saltó por un barranco altísimo y así lo salvó. Evans nunca lo olvidó: cuando Malacara murió de viejo, lo enterró en su chacra de Trevelin y le puso una lápida que dice aquí yacen los restos de mi caballo Malacara, que me salvó la vida. Todavía se puede visitar esa tumba, una de las pocas en el mundo dedicadas a un caballo.'),
+    H_('El gigante de Chubut','Hace unos años, un peón rural de una estancia cerca de Trelew vio un hueso enorme asomando de la tierra. Era de un dinosaurio. Los científicos del museo de Trelew excavaron durante meses y encontraron uno de los animales más grandes que caminaron por la Tierra: el Patagotitan. Medía más de treinta metros, como tres colectivos en fila, y pesaba casi como diez elefantes juntos. Una copia de su esqueleto está en un museo de Nueva York, y otra en Trelew.'),
+    H_('La piedra parada','En el valle del río Chubut hay una roca enorme que se levanta sola en medio de la estepa: la Piedra Parada. Mide más de doscientos metros de alto, como un rascacielos. Se formó hace millones de años, cuando en esta zona había volcanes gigantes. El viento y el agua fueron gastando todo alrededor y la piedra quedó parada. Hoy viajan escaladores de muchos países a trepar sus paredes, y al costado hay un cañadón angosto que parece un pasillo entre gigantes.'),
+    H_('Los caminos de antes','Mucho antes de que existieran las rutas de asfalto, los tehuelches cruzaban la Patagonia a pie y, después, a caballo. Con los años, de tanto pasar, marcaron senderos que se llaman rastrilladas. Unían aguadas, lugares de caza y sitios de encuentro. Sabían exactamente dónde encontrar agua en medio de la estepa. Varios de los caminos que hoy usamos siguen por donde iban esas rastrilladas. O sea que cuando viajás por la ruta, muchas veces estás siguiendo los pasos de los primeros caminantes.'),
+  ],
+  [ // Desiertos
+    H_('Manos en la piedra','Cerca de Bajo Caracoles, en el cañadón del río Pinturas, hay una cueva que guarda un tesoro: la Cueva de las Manos. Hace más de nueve mil años, los primeros habitantes de la Patagonia apoyaban la mano en la roca y soplaban alrededor pintura hecha con minerales molidos, usando huesos huecos como pajita. Así quedaron cientos de manos rojas, blancas, negras y amarillas, casi todas izquierdas. También pintaron guanacos y escenas de caza. En 1999 la Unesco la declaró Patrimonio de la Humanidad.'),
+    H_('¿Por qué Patagonia?','En 1520 el navegante Fernando de Magallanes pasó el invierno en la bahía de San Julián, en Santa Cruz. Ahí vio por primera vez a los tehuelches, que eran muy altos y llevaban mantas de piel. Los llamó patagones. Algunos dicen que fue por sus pies grandes, envueltos en cuero, y otros que fue por un gigante llamado Patagón que aparecía en un libro de aventuras de esa época. Sea como sea, de esa palabra nació el nombre de toda la región: Patagonia.'),
+    H_('Árboles de piedra','En el medio de la meseta de Santa Cruz hay un bosque muy raro: los árboles están acostados y son de piedra. Es el Bosque Petrificado de Jaramillo. Hace unos ciento cincuenta millones de años acá crecían araucarias gigantes. Los volcanes las cubrieron de ceniza y, con el tiempo, el agua fue cambiando la madera por minerales hasta convertirla en piedra. Algunos troncos miden más de treinta metros. Si los tocás, parecen madera, pero son duros y fríos como una roca.'),
+    H_('El papá choique','En la estepa corre el choique, también llamado ñandú petiso, un ave que no vuela pero corre rapidísimo. Lo curioso es que el que cuida los huevos es el papá. Varias hembras ponen sus huevos en un mismo nido, y el macho se sienta encima durante semanas para darles calor. Cuando nacen los charitos, los cuida y los defiende con mucho coraje, y hasta corre a cualquiera que se acerque. Los tehuelches lo conocían muy bien y lo representaban en sus historias.'),
+    H_('El guardián de la estepa','El guanaco es pariente del camello y de la llama, y es el gran habitante de la estepa. Vive en grupos, y siempre hay uno que vigila. Cuando ve un peligro, lanza un relincho agudo y todos salen corriendo a más de cincuenta kilómetros por hora. Puede vivir con muy poca agua y comer pastos duros. Para los tehuelches era todo: de él sacaban carne, cuero para sus toldos y lana para abrigarse. Por eso lo pintaban en las paredes de las cuevas.'),
+    H_('La casa de cuero','Los tehuelches vivían en toldos hechos con muchos cueros de guanaco cosidos, estirados sobre palos de madera. Eran casas que se podían desarmar y llevar, porque se movían por la estepa siguiendo a los animales. Para abrigarse usaban el quillango, una capa de piel de guanaco con el pelo para adentro, y del lado de afuera la pintaban con dibujos de colores, como rombos y líneas. Cada familia tenía sus diseños, y un quillango bien pintado era motivo de orgullo.'),
+    H_('La liebre que no es liebre','En la meseta vive la mara, que muchos llaman liebre patagónica. Pero no es una liebre: es un roedor, pariente del cuis y del carpincho. Tiene patas largas, orejas grandes y salta como una liebre. Lo más lindo es que las maras viven en pareja toda la vida y andan siempre juntas. Las mamás de varias familias dejan a sus crías en una cueva compartida, como un jardín de infantes, y se turnan para cuidarlas.'),
+    H_('Cuando la meseta era mar','Aunque hoy la meseta es seca y ventosa, hace millones de años gran parte de la Patagonia estaba bajo el mar. Por eso, caminando por algunos lugares de la estepa, aparecen caracoles y ostras fósiles, convertidos en piedra, a cientos de kilómetros de la costa. Hay ostras tan grandes como un plato. Cada piedrita con forma de concha es un mensaje de ese mar antiguo. Los científicos las estudian para saber cómo era el clima y qué animales vivían en aquella época.'),
+    H_('Elal y el cisne','Los tehuelches cuentan que Elal, el héroe que creó a las personas, nació en una isla en medio del mar. Para salvarse de un gigante, un cisne lo llevó volando sobre su lomo hasta la Patagonia, y bajaron en la cima de un cerro. Elal hizo a los hombres y las mujeres, les enseñó a cazar, a hacer el fuego y a vivir en la estepa. Cuando terminó su trabajo, se subió otra vez al cisne y se fue volando hacia el mar, por donde sale el sol.'),
+    H_('El joven Darwin','En 1834 llegó a la Patagonia un joven naturalista inglés que viajaba en el barco Beagle: Charles Darwin. Recorrió la costa de Santa Cruz y remontó el río Santa Cruz en botes, junto a la tripulación. En la bahía de San Julián encontró huesos de un animal extraño, que hoy conocemos como macrauquenia. Lo que vio en la Patagonia lo ayudó a pensar sus ideas sobre cómo los seres vivos cambian con el tiempo. Él escribió que esta tierra desierta lo había impresionado como pocas.'),
+  ],
+];
+
+/* ---------- Sonido ---------- */
+let AC = null, muted = false;
+function audio(){ if(!AC){ try{ AC = new (window.AudioContext||window.webkitAudioContext)(); }catch(e){} } if(AC && AC.state==='suspended') AC.resume(); }
+function tone(f, d, type='square', v=.06, slide=0){
+  if(!AC || muted) return; const t = AC.currentTime;
+  const o = AC.createOscillator(), g = AC.createGain(); o.type = type; o.frequency.setValueAtTime(f, t);
+  if(slide) o.frequency.exponentialRampToValueAtTime(Math.max(30, f*slide), t+d);
+  g.gain.setValueAtTime(v, t); g.gain.exponentialRampToValueAtTime(.0001, t+d);
+  o.connect(g).connect(AC.destination); o.start(t); o.stop(t+d+.02);
+}
+function noise(d, v=.15, freq=900){
+  if(!AC || muted) return; const t = AC.currentTime, n = Math.floor(AC.sampleRate*d);
+  const b = AC.createBuffer(1, n, AC.sampleRate), ch = b.getChannelData(0);
+  for(let i=0;i<n;i++) ch[i] = (Math.random()*2-1) * (1 - i/n);
+  const s = AC.createBufferSource(), f = AC.createBiquadFilter(), g = AC.createGain();
+  s.buffer = b; f.type='lowpass'; f.frequency.value = freq; g.gain.value = v;
+  s.connect(f).connect(g).connect(AC.destination); s.start(t);
+}
+const SFX = {
+  coin(){ tone(880,.08,'square',.05); setTimeout(()=>tone(1320,.1,'square',.05),60); },
+  ring(){ tone(660,.12,'triangle',.08); setTimeout(()=>tone(990,.16,'triangle',.08),90); },
+  boom(){ noise(.6,.3,500); tone(120,.5,'sine',.15,.3); },
+  hit(){ tone(300,.3,'sawtooth',.09,.3); noise(.2,.15,700); },
+  smash(){ noise(.25,.15,1800); },
+  clear(){ [523,659,784,1047].forEach((f,i)=>setTimeout(()=>tone(f,.18,'square',.06),i*110)); },
+  over(){ [392,330,262,196].forEach((f,i)=>setTimeout(()=>tone(f,.25,'triangle',.08),i*160)); },
+  capi(){ noise(.9,.22,600); },
+  ping(){ [1568,2093,2637].forEach((f,i)=>setTimeout(()=>tone(f,.25,'triangle',.05),i*70)); noise(.3,.08,4000); },
+  guan(){ noise(.12,.15,2500); tone(500,.08,'square',.04,.5); },
+  zorro(){ tone(400,.45,'sine',.07,2.5); },
+  huemul(){ tone(110,.5,'sawtooth',.08,2); noise(.4,.12,800); },
+};
+
+/* ---------- Narración en voz alta ---------- */
+const HAY_VOZ = 'speechSynthesis' in window;
+let voz = null, hablando = false;
+function elegirVoz(){
+  try{
+    const vs = speechSynthesis.getVoices();
+    for(const p of ['es-ar','es-419','es-us','es-mx','es-cl','es-es','es']){
+      const v = vs.find(v => v.lang.replace('_','-').toLowerCase().startsWith(p)); if(v) return v;
+    }
+  }catch(e){}
+  return null;
+}
+if(HAY_VOZ){ try{ speechSynthesis.addEventListener('voiceschanged',()=>{ voz = elegirVoz(); }); voz = elegirVoz(); }catch(e){} }
+function setHablando(v){ hablando = v; $('#bEscuchar').textContent = v ? 'Parar la historia' : 'Escuchar historia'; }
+function narrar(h){
+  if(!HAY_VOZ) return;
+  try{
+    speechSynthesis.cancel();
+    const u = new SpeechSynthesisUtterance(h.titulo + '. ' + h.texto);
+    voz = voz || elegirVoz(); if(voz) u.voice = voz;
+    u.lang = voz ? voz.lang : 'es-AR'; u.rate = .95;
+    u.onend = () => setHablando(false); u.onerror = () => setHablando(false);
+    speechSynthesis.speak(u); setHablando(true);
+  }catch(e){ setHablando(false); }
+}
+function callar(){ try{ if(HAY_VOZ) speechSynthesis.cancel(); }catch(e){} setHablando(false); }
+
+/* Elige la próxima historia de la pantalla: un orden mezclado que no repite hasta escuchar las 10.
+   Se recuerda en este navegador; si no se puede guardar, se recuerda mientras la página esté abierta. */
+const histMem={};
+function siguienteHistoria(lvl){
+  const lista=HISTORIAS[lvl], n=lista.length, key='dragones-hist-'+lvl;
+  let st=histMem[key];
+  if(!st){ try{ st=JSON.parse(localStorage.getItem(key)||'null'); }catch(e){} }
+  if(!st || !Array.isArray(st.orden) || st.orden.length!==n || st.pos>=n){
+    const prev=st && Array.isArray(st.orden) ? st.orden[n-1] : -1;
+    const orden=[...Array(n).keys()];
+    for(let i=n-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [orden[i],orden[j]]=[orden[j],orden[i]]; }
+    if(orden[0]===prev) [orden[0],orden[n-1]]=[orden[n-1],orden[0]];
+    st={ orden, pos:0 };
+  }
+  const h=lista[st.orden[st.pos]], num=st.pos+1;
+  st={ orden:st.orden, pos:st.pos+1 };
+  histMem[key]=st; try{ localStorage.setItem(key,JSON.stringify(st)); }catch(e){}
+  return { ...h, num, total:n };
+}
+
+/* ---------- Dibujo: utilidades ---------- */
+function ell(g,x,y,rx,ry,c){ if(c) g.fillStyle=c; g.beginPath(); g.ellipse(x,y,rx,ry,0,0,Math.PI*2); g.fill(); }
+function rr(g,x,y,w,h,r,c){ if(c) g.fillStyle=c; g.beginPath(); g.moveTo(x+r,y); g.arcTo(x+w,y,x+w,y+h,r); g.arcTo(x+w,y+h,x,y+h,r); g.arcTo(x,y+h,x,y,r); g.arcTo(x,y,x+w,y,r); g.closePath(); g.fill(); }
+function tri(g,a,b,c,d,e,f,col){ if(col) g.fillStyle=col; g.beginPath(); g.moveTo(a,b); g.lineTo(c,d); g.lineTo(e,f); g.closePath(); g.fill(); }
+function heart(g,x,y,s,c){ g.fillStyle=c; g.beginPath(); g.moveTo(x,y+s*.35); g.bezierCurveTo(x,y-s*.3,x-s,y-s*.3,x-s,y+s*.2); g.bezierCurveTo(x-s,y+s*.7,x-s*.2,y+s*.95,x,y+s*1.25); g.bezierCurveTo(x+s*.2,y+s*.95,x+s,y+s*.7,x+s,y+s*.2); g.bezierCurveTo(x+s,y-s*.3,x,y-s*.3,x,y+s*.35); g.fill(); }
+function outlined(g,txt,x,y,size,fill,align='left'){ g.font=`${size}px ${FONT}`; g.textAlign=align; g.lineJoin='round'; g.lineWidth=Math.max(3,size/7); g.strokeStyle='rgba(10,16,28,.65)'; g.strokeText(txt,x,y); g.fillStyle=fill; g.fillText(txt,x,y); }
+
+/* ---------- Jinetes ---------- */
+function drawRider(g,ch,t){
+  g.save(); g.translate(0, Math.sin(t*10)*1.2);
+  const eye=(x,y)=>{ ell(g,x,y,2,2,'#fff'); ell(g,x+.6,y,1.2,1.3,'#151515'); };
+  if(ch.id==='capi'){
+    const w=Math.sin(t*14);
+    g.fillStyle='#74acdf'; g.beginPath(); g.moveTo(3,-12); g.quadraticCurveTo(-12,-15+w*3,-26,-9+w*5); g.lineTo(-23,-4+w*3); g.quadraticCurveTo(-10,-8,3,-7); g.fill();
+    ell(g,0,-4,13,11,'#a86b3c');
+    rr(g,-1,-27,25,17,7,'#b5773f');
+    rr(g,15,-24,11,13,5,'#8c5a30');
+    ell(g,24,-20,1.7,1.4,'#2b1a10');
+    ell(g,4,-27,3.2,2.6,'#7a4a26');
+    ell(g,13,-22,1.9,1.9,'#1a1a1a');
+    rr(g,0,-13,17,5,2,'#74acdf'); rr(g,0,-11.6,17,1.6,.6,'#ffffff');
+    ell(g,9,-1,4.5,3,'#8c5a30');
+  } else if(ch.id==='ping'){
+    ell(g,0,-6,11,13,'#1d1f24'); ell(g,4,-4,7,10,'#f4f4f0');
+    ell(g,6,-22,9,8,'#1d1f24');
+    g.strokeStyle='#f4f4f0'; g.lineWidth=2; g.beginPath(); g.arc(7,-21,6.5,-1.1,1.6); g.stroke();
+    tri(g,13,-24,22,-21.5,13,-19,'#f2a03d');
+    eye(9,-24);
+    ell(g,-4,-4,3.5,8,'#2a2d34');
+  } else if(ch.id==='guan'){
+    ell(g,0,-4,13,10,'#c99a5e'); ell(g,2,0,9,5,'#f1e4cf');
+    rr(g,4,-31,8,28,4,'#c99a5e'); rr(g,9,-29,3,23,1.5,'#f1e4cf');
+    ell(g,9,-38,2.2,5,'#b98a50');
+    ell(g,13,-32,8.5,5.5,'#c99a5e'); ell(g,19,-31,4.5,4,'#6b6258');
+    eye(13,-34);
+  } else if(ch.id==='zorro'){
+    ell(g,-15,-5,10,4.5,'#c8642c'); ell(g,-23,-6,3.5,3,'#f2ede2');
+    ell(g,0,-4,12,10,'#c8642c'); ell(g,4,0,6,6,'#f2ede2');
+    ell(g,8,-20,9,8,'#c8642c');
+    tri(g,3,-25,5,-36,11,-26,'#c8642c'); tri(g,9,-26,13,-36,15,-24,'#c8642c');
+    tri(g,4.2,-31,5,-36,7.2,-30.5,'#2a1a12'); tri(g,11.8,-31,13,-36,14.2,-30,'#2a1a12');
+    tri(g,12,-24,25,-18,12,-14,'#c8642c'); ell(g,13,-15,5.5,3,'#f2ede2');
+    ell(g,24,-18.5,1.7,1.4,'#1a1a1a');
+    eye(11,-22);
+  } else {
+    ell(g,0,-4,12,10,'#8a6a4a'); ell(g,3,0,7,4,'#cdb796');
+    g.strokeStyle='#ece0c4'; g.lineWidth=2; g.lineCap='round'; g.beginPath();
+    g.moveTo(6,-27); g.lineTo(2,-41); g.moveTo(4,-34); g.lineTo(-3,-37);
+    g.moveTo(11,-27); g.lineTo(15,-41); g.moveTo(13,-34); g.lineTo(20,-37); g.stroke();
+    ell(g,3,-25,2.5,4.5,'#7a5c40');
+    ell(g,10,-21,8,7,'#8a6a4a'); ell(g,16,-18,5.5,4,'#6e523a');
+    ell(g,20.5,-18.5,1.6,1.4,'#1a1a1a');
+    eye(11,-23);
+  }
+  g.restore();
+}
+
+/* ---------- Dragón + jinete ---------- */
+function wing(g,color,x,y,flap,k){
+  const tip = y - 14 - 34*flap*k;
+  g.fillStyle=color; g.beginPath();
+  g.moveTo(x+6,y); g.lineTo(x-8,tip); g.lineTo(x-26,tip+6);
+  g.quadraticCurveTo(x-26,y-6,x-34,y+2); g.quadraticCurveTo(x-18,y-2,x-14,y+4); g.closePath(); g.fill();
+}
+function drawRig(g,ch,x,y,t,s=1,alpha=1){
+  g.save(); g.translate(x,y); g.scale(s,s);
+  g.globalAlpha=alpha;
+  const flap=Math.sin(t*9), wt=Math.sin(t*6);
+  g.fillStyle=ch.dragon; g.beginPath(); g.moveTo(-28,0); g.quadraticCurveTo(-55,6+wt*4,-74,-4+wt*7); g.lineTo(-70,4+wt*6); g.quadraticCurveTo(-52,16,-26,10); g.fill();
+  tri(g,-74,-4+wt*7,-86,-10+wt*8,-80,4+wt*7,ch.dark);
+  wing(g,ch.dark,-2,-4,flap,.85);
+  ell(g,-12,14,5,6,ch.dark); ell(g,14,14,5,6,ch.dark);
+  ell(g,0,4,36,16,ch.dragon); ell(g,4,11,25,6.5,ch.belly);
+  for(let i=0;i<4;i++) tri(g,-26+i*9,-9,-21+i*9,-17,-17+i*9,-10,ch.dark);
+  g.fillStyle=ch.dragon; g.beginPath(); g.moveTo(20,-4); g.quadraticCurveTo(36,-10,44,-22); g.lineTo(58,-18); g.quadraticCurveTo(48,-2,30,12); g.fill();
+  ell(g,55,-21,14,9.5,ch.dragon); ell(g,67,-18,9,6.5,ch.dragon);
+  tri(g,48,-28,40,-40,54,-29,ch.dark); tri(g,54,-29,50,-41,60,-28,ch.dark);
+  ell(g,58,-24,3.4,3.4,'#fff'); ell(g,59,-24,1.8,2.2,'#111');
+  ell(g,73,-20,1.3,1,'#111');
+  g.strokeStyle=ch.dark; g.lineWidth=1.5; g.beginPath(); g.moveTo(62,-14); g.lineTo(75,-15); g.stroke();
+  g.save(); g.translate(-6,-12); drawRider(g,ch,t); g.restore();
+  wing(g,ch.dragon,4,-6,Math.sin(t*9+.5),1);
+  g.restore();
+}
+
+/* ---------- Fondos ---------- */
+function peaks(g,off,base,sp,minH,maxH,color,snow,seed,spiky){
+  g.fillStyle=color; g.fillRect(0,base-1,W,H-base+1);
+  const k0=Math.floor(off/sp)-2, k1=k0+Math.ceil(W/sp)+5;
+  for(let k=k0;k<=k1;k++){
+    const px=k*sp-off+hash(k+seed)*sp*.4, h=minH+hash(k*3.1+seed)*(maxH-minH), w=sp*(1.1+hash(k*7.7+seed)*.7);
+    tri(g,px-w/2,base,px,base-h,px+w/2,base,color);
+    if(spiky && hash(k+seed*2)>.45){ tri(g,px-w*.05,base,px+w*.16,base-h*.8,px+w*.38,base,color); }
+    if(snow){ g.fillStyle='rgba(255,255,255,.88)'; g.beginPath(); g.moveTo(px,base-h);
+      g.lineTo(px+w*.13,base-h*.72); g.lineTo(px+w*.05,base-h*.76); g.lineTo(px-w*.02,base-h*.7); g.lineTo(px-w*.08,base-h*.77); g.lineTo(px-w*.13,base-h*.72); g.closePath(); g.fill(); }
+  }
+}
+function hills(g,off,base,amp,freq,color,seed){
+  g.fillStyle=color; g.beginPath(); g.moveTo(0,H);
+  for(let x=0;x<=W+10;x+=10){ const X=x+off; g.lineTo(x, base - amp*(.55*Math.sin(X*freq+seed)+.3*Math.sin(X*freq*2.3+seed*1.7)+.15*Math.sin(X*freq*5.1+seed*.3))); }
+  g.lineTo(W,H); g.closePath(); g.fill();
+}
+function trees(g,off,base,sp,size,color,seed){
+  const k0=Math.floor(off/sp)-2, k1=k0+Math.ceil(W/sp)+4; g.fillStyle=color;
+  for(let k=k0;k<=k1;k++){
+    const px=k*sp-off+hash(k+seed)*sp*.6, h=size*(.7+hash(k*2.3+seed)*.6), w=h*.42;
+    g.fillRect(px-w*.08,base-h*.25,w*.16,h*.3);
+    for(let j=0;j<3;j++){ const yy=base-h*.2-j*h*.26, ww=w*(1-j*.22); tri(g,px-ww,yy,px,yy-h*.42,px+ww,yy); }
+  }
+}
+function mesetas(g,off,base,sp,minH,maxH,color,stripe,seed){
+  g.fillStyle=color; g.fillRect(0,base-1,W,H-base+1);
+  const k0=Math.floor(off/sp)-2, k1=k0+Math.ceil(W/sp)+4;
+  for(let k=k0;k<=k1;k++){
+    const px=k*sp-off+hash(k+seed)*sp*.5, w=sp*(.7+hash(k*1.9+seed)*.6), h=minH+hash(k*4.3+seed)*(maxH-minH);
+    g.fillStyle=color; g.beginPath(); g.moveTo(px-w/2,base); g.lineTo(px-w/2+h*.35,base-h); g.lineTo(px+w/2-h*.35,base-h); g.lineTo(px+w/2,base); g.closePath(); g.fill();
+    g.fillStyle=stripe; g.fillRect(px-w/2+h*.35,base-h,w-h*.7,3); g.fillRect(px-w/2+h*.55,base-h*.55,w-h*1.1,2);
+  }
+}
+function clouds(g,off,t){
+  g.fillStyle='rgba(255,255,255,.7)';
+  for(let k=0;k<6;k++){ const sp=W+400, x=((k*260 - off*.06 - t*8)%sp+sp)%sp-200, y=60+hash(k)*120, s=.7+hash(k+5)*.8;
+    ell(g,x,y,48*s,14*s); ell(g,x+26*s,y-8*s,30*s,14*s); ell(g,x-24*s,y-4*s,26*s,11*s); }
+}
+function drawBG(g,L,off,t){
+  const sky=g.createLinearGradient(0,0,0,H); sky.addColorStop(0,L.sky[0]); sky.addColorStop(.6,L.sky[1]); sky.addColorStop(1,L.sky[2]);
+  g.fillStyle=sky; g.fillRect(0,0,W,H);
+  if(L.key==='desi'){ ell(g,W*.78,H*.36,46,46,'rgba(255,240,190,.9)'); }
+  else ell(g,W*.82,80,30,30,'rgba(255,250,225,.85)');
+  clouds(g,off,t);
+  const gH=L.groundH;
+  if(L.key==='mont'){
+    peaks(g,off*.12,H-150,230,150,300,L.far,true,1,true);
+    peaks(g,off*.3,H-gH-20,170,70,170,L.mid,true,2,false);
+    g.fillStyle=L.ground; g.fillRect(0,H-gH,W,gH);
+    g.fillStyle=L.ground2; for(let i=0;i<14;i++){ const x=((i*97-off)%(W+100)+W+100)%(W+100)-50; g.fillRect(x,H-gH+10+(i%3)*10,30,3); }
+  } else if(L.key==='lago'){
+    peaks(g,off*.1,H-170,250,120,240,L.far,true,3,false);
+    hills(g,off*.25,H-140,30,.006,L.mid,1);
+    const wy=H-130, wg=g.createLinearGradient(0,wy,0,H); wg.addColorStop(0,L.water[0]); wg.addColorStop(1,L.water[1]);
+    g.fillStyle=wg; g.fillRect(0,wy,W,H-wy);
+    g.fillStyle='rgba(255,255,255,.35)';
+    for(let i=0;i<26;i++){ const sp=W+120, x=((i*143-off*(.5+(i%4)*.15))%sp+sp)%sp-60, y=wy+8+(i*37)%(H-wy-10); g.fillRect(x,y,24+(i%5)*10,2); }
+  } else if(L.key==='bosq'){
+    hills(g,off*.1,H-190,40,.004,'#87a99a',2);
+    trees(g,off*.25,H-gH-30,46,110,L.far,4);
+    trees(g,off*.55,H-gH+6,70,170,L.mid,7);
+    g.fillStyle=L.ground; g.fillRect(0,H-gH,W,gH);
+    g.fillStyle=L.ground2; for(let i=0;i<18;i++){ const x=((i*71-off)%(W+60)+W+60)%(W+60)-30; ell(g,x,H-gH+14+(i%3)*11,10,4); }
+  } else if(L.key==='ruta'){
+    peaks(g,off*.08,H-170,300,70,130,L.far,true,5,false);
+    hills(g,off*.2,H-130,22,.005,L.mid,3);
+    g.fillStyle=L.ground; g.fillRect(0,H-gH-50,W,gH+50);
+    g.fillStyle=L.ground2; for(let i=0;i<20;i++){ const x=((i*83-off*.8)%(W+60)+W+60)%(W+60)-30; ell(g,x,H-gH-36+(i%4)*9,8,4); }
+    const ry=H-gH+8; g.fillStyle=L.road; g.fillRect(0,ry,W,40);
+    g.fillStyle='#e9e6dc'; g.fillRect(0,ry+2,W,2); g.fillRect(0,ry+36,W,2);
+    g.fillStyle='#f6c431'; const d=off%90; for(let x=-d;x<W;x+=90) g.fillRect(x,ry+18,46,4);
+    for(let x=-(off%420);x<W;x+=420){ g.fillStyle='#f0f0f0'; g.fillRect(x+200,ry-26,5,26); g.fillStyle='#d63b2f'; g.fillRect(x+200,ry-26,5,5); }
+    g.fillStyle=L.ground2; g.fillRect(0,ry+40,W,H-ry-40);
+  } else {
+    mesetas(g,off*.1,H-150,320,60,120,L.far,'rgba(255,230,190,.35)',6);
+    mesetas(g,off*.3,H-gH-14,260,40,90,L.mid,'rgba(255,220,180,.3)',8);
+    g.fillStyle=L.ground; g.fillRect(0,H-gH,W,gH);
+    for(let i=0;i<16;i++){ const x=((i*89-off)%(W+80)+W+80)%(W+80)-40; ell(g,x,H-gH+12+(i%3)*12,12,6,i%2?'#9a7a3a':'#b58e48'); }
+  }
+}
+
+/* ---------- Obstáculos ---------- */
+function column(g,o,L){
+  const {x,y,w,h,top}=o, [c1,c2]=L.col;
+  if(L.key==='bosq' && !top){
+    g.fillStyle='#5a3a22'; g.fillRect(x+w*.38,y+h*.45,w*.24,h*.55);
+    for(let j=0;j<4;j++){ const yy=y+h*.55-j*h*.16, ww=w*(.75-j*.12); tri(g,x+w/2-ww,yy,x+w/2,yy-h*.26,x+w/2+ww,yy, j%2?'#2e5a33':'#3b6b3e'); }
+    return;
+  }
+  g.fillStyle=c1; g.beginPath();
+  if(!top){ g.moveTo(x,y+h); g.lineTo(x+w*.08,y+16); g.lineTo(x+w*.35,y); g.lineTo(x+w*.7,y+7); g.lineTo(x+w*.95,y+20); g.lineTo(x+w,y+h); }
+  else { g.moveTo(x,y); g.lineTo(x+w,y); g.lineTo(x+w*.93,y+h-18); g.lineTo(x+w*.62,y+h); g.lineTo(x+w*.3,y+h-9); g.lineTo(x+w*.06,y+h-22); }
+  g.closePath(); g.fill();
+  g.fillStyle=c2; g.fillRect(x+w*.14,y+(top?4:22),w*.16,h-30);
+  g.fillStyle='rgba(0,0,0,.18)'; g.fillRect(x+w*.64,y+(top?4:22),w*.26,h-34);
+  if(L.key==='desi'||L.key==='ruta'){ g.fillStyle='rgba(255,235,200,.22)'; for(let s=y+30;s<y+h-10;s+=26) g.fillRect(x+w*.06,s,w*.88,4); }
+  if(L.key==='mont'){
+    g.fillStyle='#f4f8fb';
+    if(!top){ g.beginPath(); g.moveTo(x+w*.08,y+16); g.lineTo(x+w*.35,y); g.lineTo(x+w*.7,y+7); g.lineTo(x+w*.95,y+20); g.lineTo(x+w*.78,y+30); g.lineTo(x+w*.5,y+22); g.lineTo(x+w*.25,y+32); g.closePath(); g.fill(); }
+    else { for(let i=0;i<4;i++) tri(g,x+w*(.12+i*.2),y+h-24,x+w*(.2+i*.2),y+h+10-(i%2)*10,x+w*(.28+i*.2),y+h-24,'#d8ecf7'); }
+  }
+  if(L.key==='lago' && !top){ g.fillStyle='#4f7d4a'; g.beginPath(); g.ellipse(x+w*.45,y+8,w*.42,9,0,0,Math.PI*2); g.fill(); }
+  if(L.key==='bosq' && top){ for(let i=0;i<5;i++) ell(g,x+w*(.1+i*.2),y+h-6,9,7,i%2?'#2e5a33':'#3b6b3e'); }
+  if(L.key==='ruta' && !top && h>120){
+    const sx=x+w/2, sy=y+h*.42;
+    g.fillStyle='#fff'; g.beginPath(); g.moveTo(sx-16,sy-18); g.lineTo(sx+16,sy-18); g.lineTo(sx+16,sy+6); g.quadraticCurveTo(sx,sy+20,sx-16,sy+6); g.closePath(); g.fill();
+    g.fillStyle='#111'; g.font=`16px ${FONT}`; g.textAlign='center'; g.fillText('40',sx,sy+4);
+  }
+}
+function drawRock(g,o,L,t){
+  g.save(); g.translate(o.x,o.y); g.rotate(o.rot);
+  g.fillStyle=L.rock; g.beginPath();
+  for(let i=0;i<9;i++){ const a=i/9*Math.PI*2, r=o.r*(.78+hash(o.seed+i)*.32); i?g.lineTo(Math.cos(a)*r,Math.sin(a)*r):g.moveTo(Math.cos(a)*r,Math.sin(a)*r); }
+  g.closePath(); g.fill();
+  ell(g,-o.r*.3,-o.r*.3,o.r*.35,o.r*.22,L.rockHi);
+  ell(g,o.r*.25,o.r*.3,o.r*.18,o.r*.12,'rgba(0,0,0,.2)');
+  g.restore();
+}
+function drawBird(g,o,t){
+  const f=o.frozen?0:Math.sin(t*8+o.seed);
+  g.save(); g.translate(o.x,o.y);
+  g.fillStyle='#1b1b1f'; g.beginPath(); g.moveTo(0,0); g.lineTo(18,-6-f*18); g.lineTo(40,-2-f*20); g.lineTo(30,4); g.closePath(); g.fill();
+  g.beginPath(); g.moveTo(0,0); g.lineTo(-6,-4-f*16); g.lineTo(-14,-2-f*18); g.lineTo(-8,4); g.closePath(); g.fill();
+  ell(g,6,4,20,8,'#1b1b1f');
+  g.fillStyle='#e8e8e8'; g.fillRect(16-f*3,-4-f*14,14,3);
+  ell(g,-12,0,6,5,'#f2f2f2'); ell(g,-18,-1,5,4,'#c96a5a');
+  tri(g,-22,-2,-28,1,-22,1,'#d9c9a0');
+  ell(g,-19,-2,1,1,'#111');
+  g.restore();
+}
+function drawBomb(g,o,t){
+  if(o.state==='boom'){
+    const a=1-o.boomT/1.0;
+    g.save(); g.globalAlpha=clamp(a*1.3,0,1);
+    g.lineWidth=16; g.strokeStyle='#ff6a2b'; g.beginPath(); g.arc(o.x,o.y,o.br,0,Math.PI*2); g.stroke();
+    g.lineWidth=6; g.strokeStyle='#ffd34a'; g.beginPath(); g.arc(o.x,o.y,o.br,0,Math.PI*2); g.stroke();
+    g.restore(); return;
+  }
+  const pulse=.5+.5*Math.sin(t*(o.state==='fuse'?30:5));
+  ell(g,o.x,o.y,o.r+6,o.r+6,`rgba(255,110,40,${.15+pulse*.25})`);
+  ell(g,o.x,o.y,o.r,o.r,'#3a2a28');
+  g.strokeStyle=`rgba(255,${140+pulse*90|0},40,${.6+pulse*.4})`; g.lineWidth=3; g.beginPath();
+  g.moveTo(o.x-12,o.y-8); g.lineTo(o.x-2,o.y-1); g.lineTo(o.x-5,o.y+10); g.moveTo(o.x-2,o.y-1); g.lineTo(o.x+11,o.y-5); g.lineTo(o.x+14,o.y+6); g.stroke();
+  if(o.state==='fuse'){ outlined(g,'!',o.x,o.y-o.r-10,30,pulse>.5?'#ff3b30':'#fff','center'); }
+}
+function drawIce(g,o){
+  const r=(o.r||22)+10;
+  ell(g,o.x,o.y,r,r,'rgba(200,236,255,.55)');
+  g.strokeStyle='rgba(255,255,255,.9)'; g.lineWidth=2; g.beginPath(); g.arc(o.x,o.y,r,0,Math.PI*2); g.stroke();
+  g.beginPath(); g.moveTo(o.x-r*.5,o.y-r*.2); g.lineTo(o.x-r*.1,o.y-r*.5); g.moveTo(o.x+r*.2,o.y+r*.4); g.lineTo(o.x+r*.5,o.y+r*.1); g.stroke();
+}
+function drawRingHalf(g,o,front){
+  const a0=front?-Math.PI/2:Math.PI/2, a1=front?Math.PI/2:Math.PI*1.5;
+  const flick=Math.sin(T*20+o.seed)*1.5;
+  g.lineCap='round';
+  g.lineWidth=14+flick; g.strokeStyle='rgba(255,90,30,.85)'; g.beginPath(); g.ellipse(o.x,o.cy,o.rx,o.ry,0,a0,a1); g.stroke();
+  g.lineWidth=6; g.strokeStyle='#ffd34a'; g.beginPath(); g.ellipse(o.x,o.cy,o.rx,o.ry,0,a0,a1); g.stroke();
+}
+function drawCoin(g,o,t){
+  const sq=Math.abs(Math.cos(t*4+o.seed));
+  ell(g,o.x,o.y,11*(.35+.65*sq),11,'#4b2a16');
+  ell(g,o.x,o.y-1.5,9*(.35+.65*sq),8,'#6e3d20');
+  ell(g,o.x-2*sq,o.y-4,3*sq,1.6,'rgba(255,255,255,.5)');
+}
+
+/* ---------- Estado ---------- */
+let state='menu', G=null, chosen=0, T=0, attractOff=0;
+const keys={};
+let drag=null, fireHeld=false, pedidoPoder=false;
+let record=0; try{ record=+localStorage.getItem('dragones-record')||0; }catch(e){}
+
+function newGame(ci){
+  chosen=ci; G={ ch:CHARS[ci], lives:3, score:0, lvl:0 };
+  const m=/^#nivel([1-5])$/.exec(location.hash);
+  startLevel(m?+m[1]-1:0);}
+function startLevel(i){
+  const starts=[-130,-55,60,140], bias=[.01,0,-.01,.005], err=[60,140,220,100];
+  const rivals=CHARS.filter(c=>c!==G.ch).map((ch,k)=>({ ch, rd:170+starts[k], x:0, y:100+k*95, ty:100+k*95,
+    cd:rand(1.5,ch.cd), ghost:0, charge:0, inv:0, think:0, ph:rand(0,6), freq:rand(.25,.5), bias:bias[k], err:err[k], danger:0 }));
+  Object.assign(G,{ lvl:i, dist:0, objs:[], shots:[], fx:[], parts:[], pops:[], nextSpawn:780, shake:0, flash:0,
+    p:{ ch:G.ch, x:170, y:H/2, vx:0, vy:0, cd:0, ghost:0, charge:0, inv:0 }, rivals, raceAdj:0, raceVis:0,
+    t:0, dying:0, coins:0, rings:0, smashed:0 });
+  setState('play');
+  // Sacar el foco del botón tocado: si no, Espacio lo "aprieta" de nuevo y reinicia en vez de usar el poder
+  if(document.activeElement && document.activeElement!==document.body) document.activeElement.blur();
+  cv.tabIndex=-1; cv.focus({preventScroll:true});
+}
+function setState(s){
+  state=s;
+  for(const id of ['ovMenu','ovSelect','ovClear','ovPausa','ovFin']) $('#'+id).hidden=true;
+  const map={menu:'ovMenu',select:'ovSelect',clear:'ovClear',paused:'ovPausa',over:'ovFin',win:'ovFin'};
+  if(map[s]) $('#'+map[s]).hidden=false;
+  const touch=matchMedia('(pointer:coarse)').matches;
+  $('#fireBtn').hidden=!(touch && s==='play'); $('#pauseBtn').hidden=!(touch && s==='play');
+  if(s==='menu') $('#recordTxt').textContent = record ? `Récord en este navegador: ${record} puntos` : '';
+}
+
+/* ---------- Aparición de obstáculos ---------- */
+function pick(mix){ let tot=0; for(const k in mix) tot+=mix[k]; let r=Math.random()*tot; for(const k in mix){ r-=mix[k]; if(r<=0) return k; } return 'rock'; }
+function coinsLine(x,y,n,dy=0){ for(let i=0;i<n;i++) G.objs.push({t:'coin',x:x+i*42,y:y+Math.sin(i/(n-1||1)*Math.PI)*dy,seed:Math.random()*9}); }
+function spawn(){
+  const L=LEVELS[G.lvl], x=W+90, top=60, bot=H-L.groundH, lv=G.lvl;
+  switch(pick(L.mix)){
+    case 'pillar': {
+      const fromTop=Math.random()<.4, h=rand(130,230+lv*18), w=rand(58,78);
+      G.objs.push({t:'col',x,w,h,top:fromTop,y:fromTop?0:bot-h});
+      if(Math.random()<.6) coinsLine(x+w/2-42,fromTop?h+60:bot-h-60,3);
+      break; }
+    case 'gate': {
+      const gap=215-lv*10, c=rand(top+gap/2+30,bot-gap/2-30), w=rand(60,74);
+      G.objs.push({t:'col',x,w,h:c-gap/2,top:true,y:0});
+      G.objs.push({t:'col',x,w,h:bot-(c+gap/2),top:false,y:c+gap/2});
+      coinsLine(x-20,c,3); break; }
+    case 'rock': {
+      const n=Math.random()<.4+lv*.08?2:1;
+      for(let i=0;i<n;i++) G.objs.push({t:'rock',x:x+i*rand(120,220),y0:rand(top+30,bot-40),y:0,r:rand(26,40),rot:0,vr:rand(-1.5,1.5),bob:rand(0,6),amp:rand(10,40+lv*8),seed:Math.random()*99});
+      break; }
+    case 'bird': {
+      const n=1+Math.floor(Math.random()*(1+lv*.5)), by=rand(top+30,bot-80);
+      for(let i=0;i<n;i++){ const y=clamp(by+i*rand(-50,50),top,bot-40); G.objs.push({t:'bird',x:x+i*90,y,y0:y,r:18,vx:rand(110,160+lv*15),seed:Math.random()*9,ph:rand(0,6)}); }
+      break; }
+    case 'coins': coinsLine(x,rand(top+60,bot-80),6,rand(-70,70)); break;
+    case 'ring': {
+      const ry=70, cy=rand(top+ry+10,bot-ry-10);
+      G.objs.push({t:'ring',x,cy,cy0:cy,rx:20,ry,seed:Math.random()*9,amp:lv>=2?rand(20,40+lv*8):0,ph:rand(0,6),passed:false});
+      break; }
+    case 'bomb': {
+      G.objs.push({t:'bomb',x,y:rand(top+40,bot-50),r:22,state:'idle',fuse:0,boomT:0,br:0,hit:{}});
+      break; }
+  }
+}
+
+/* ---------- Efectos ---------- */
+function burst(x,y,n,colors,spd=220,grav=200,size=[3,7]){
+  for(let i=0;i<n;i++){ const a=Math.random()*Math.PI*2, s=rand(spd*.3,spd);
+    G.parts.push({x,y,vx:Math.cos(a)*s,vy:Math.sin(a)*s,life:rand(.4,.9),max:.9,size:rand(size[0],size[1]),c:colors[i%colors.length],grav}); }
+}
+function pop(x,y,txt,c='#fff'){ G.pops.push({x,y,txt,c,life:1}); }
+const rompible = o => o.t==='rock' || o.t==='bird' || (o.t==='bomb' && o.state!=='boom');
+
+function smash(o,mine){
+  if(o.dead) return; o.dead=true;
+  const L=LEVELS[G.lvl];
+  const cx=o.t==='col'?o.x+o.w/2:o.x, cy=o.t==='col'?o.y+o.h/2:o.y;
+  const cols=o.frozen?['#dff4ff','#ffffff','#a8d8f0']:o.t==='bird'?['#1b1b1f','#e8e8e8']:o.t==='bomb'?['#3a2a28','#ffd34a']:[L.rock,L.rockHi,'#ffffff'];
+  burst(cx,cy,o.t==='col'?30:18,cols,240,300);
+  if(mine){ G.score+=30; G.smashed++; pop(cx,cy-20,'+30','#ffd34a'); SFX.smash(); }
+}
+
+/* ---------- Poderes ---------- */
+function usePower(a,mine){
+  const id=a.ch.id; a.cd=a.ch.cd;
+  if(mine) SFX[id]();
+  if(id==='capi'){ G.fx.push({t:'wind',x:a.x+30,y:a.y-6,life:1,mine}); }
+  else if(id==='ping'){
+    G.flash=.45;
+    for(const o of G.objs) if(rompible(o) && !o.frozen && o.x>-40 && o.x<W+40){ o.frozen=.5; o.mine=mine; }
+  }
+  else if(id==='guan'){ G.shots.push({x:a.x+72,y:a.y-18,vx:840,life:.8,mine}); }
+  else if(id==='zorro'){ a.ghost=3; burst(a.x,a.y,14,['#e7c6f0','#ffffff'],150,0); }
+  else { a.charge=1.4; }
+  if(mine) pop(a.x+10,a.y-62,a.ch.pnom,'#bfe3ff');
+}
+
+/* ---------- Choques (jugador y rivales) ---------- */
+function hitTest(o,cx,cy,pr){
+  switch(o.t){
+    case 'col': return circRect(cx,cy,pr-4,o.x,o.y,o.w,o.h);
+    case 'rock': return !o.frozen && dist2(cx,cy,o.x,o.y)<(pr+o.r*.82)**2;
+    case 'bird': return !o.frozen && dist2(cx,cy,o.x,o.y+2)<(pr+16)**2;
+    case 'ring': { const dy=Math.abs(cy-o.cy); return Math.abs(cx-o.x)<o.rx+8 && dy>o.ry-18 && dy<o.ry+16; }
+    case 'bomb':
+      if(o.state==='boom'){ const d=Math.sqrt(dist2(cx,cy,o.x,o.y)); return o.boomT<.95 && Math.abs(d-o.br)<pr*.75+7; }
+      return !o.frozen && dist2(cx,cy,o.x,o.y)<(pr+o.r)**2;
+  }
+  return false;
+}
+function collideActor(a,key,mine){
+  const cx=a.x+8, cy=a.y-2;
+  for(const o of G.objs){
+    if(o.dead) continue;
+    if(o.t==='coin'){
+      if(dist2(cx,cy,o.x,o.y)<34*34){ o.dead=true;
+        if(mine){ G.score+=50; G.coins++; SFX.coin(); pop(o.x,o.y-16,'+50','#ffd34a'); burst(o.x,o.y,6,['#ffd34a','#fff'],120,0,[2,4]); } }
+      continue;
+    }
+    if(a.charge>0 && o.t!=='ring' && !(o.t==='bomb'&&o.state==='boom')){ if(hitTest(o,cx,cy,32)) smash(o,mine); continue; }
+    if(!hitTest(o,cx,cy,22)) continue;
+    if(a.ghost>0) continue;
+    if(o.t==='bomb' && o.state!=='boom'){ explode(o); continue; }
+    if(o.t==='bomb'){ if(o.hit[key]) continue; o.hit[key]=1; }
+    if(a.inv>0) continue;
+    if(mine) hurt(); else rivalHurt(a);
+    break;
+  }
+}
+function hurt(){
+  const p=G.p;
+  G.lives--; p.inv=1.8; G.shake=.45; G.raceAdj-=220; SFX.hit();
+  burst(p.x,p.y,24,['#ff6a2b','#ffd34a','#ffffff']);
+  if(G.lives<=0){ G.dying=1.3; SFX.over(); }
+}
+function rivalHurt(r){
+  r.inv=1.5; r.rd-=200;
+  if(r.x>-20 && r.x<W+20) burst(r.x,r.y,14,['#ff6a2b','#ffd34a',r.ch.dragon]);
+}
+
+/* ---------- Rivales (los maneja la máquina) ---------- */
+function chooseLane(r,L){
+  const bot=H-L.groundH-24; let best=r.y, bestC=1e9;
+  for(let y=70;y<=bot;y+=26){
+    let c=Math.abs(y-r.y)*.6 + (Math.random()-.5)*r.err;
+    for(const o of G.objs){
+      if(o.dead) continue;
+      const rel=o.x-r.x, w=o.w||0;
+      if(rel+w<-40 || rel>320) continue;
+      const near=rel<130?2:1;
+      if(o.t==='col'){ if(y>o.y-34 && y<o.y+o.h+34) c+=900*near; }
+      else if(o.t==='rock'||o.t==='bird'){ if(!o.frozen && Math.abs(y-o.y)<o.r+42) c+=600*near; }
+      else if(o.t==='ring'){ const d=Math.abs(y-o.cy); if(d>o.ry-30 && d<o.ry+30) c+=700*near; else if(d<o.ry-30) c-=100; }
+      else if(o.t==='bomb'){ if(o.state==='boom'){ const d=Math.hypot(rel,y-o.y); if(Math.abs(d-o.br-50)<50) c+=500; } else if(Math.abs(y-o.y)<150) c+=250; }
+      else if(o.t==='coin'){ if(Math.abs(y-o.y)<22) c-=50; }
+    }
+    if(c<bestC){ bestC=c; best=y; }
+  }
+  r.danger=bestC-Math.abs(best-r.y)*.6;
+  return best;
+}
+function updateRivals(dt,L){
+  const pRace=G.dist+G.p.x+G.raceAdj;
+  for(const r of G.rivals){
+    r.ph+=dt;
+    r.rd+=L.speed*(1+r.bias+Math.sin(r.ph*r.freq)*.05)*dt;
+    const diff=r.rd-pRace;
+    if(Math.abs(diff)>450) r.rd-=(diff-Math.sign(diff)*450)*.5*dt;
+    if(r.charge>0){ r.charge-=dt; r.rd+=220*dt; }
+    r.ghost=Math.max(0,r.ghost-dt); r.inv=Math.max(0,r.inv-dt); r.cd=Math.max(0,r.cd-dt);
+    r.x=r.rd-G.dist-G.raceVis;
+    r.think-=dt;
+    if(r.think<=0){ r.think=rand(.1,.22); r.ty=chooseLane(r,L); }
+    r.y+=clamp(r.ty-r.y,-320*dt,320*dt);
+    r.y=clamp(r.y,62,H-L.groundH-24);
+    if(r.x>-40 && r.x<W+40){
+      collideActor(r,r.ch.id,false);
+      const ahead=G.objs.some(o=>!o.dead && rompible(o) && o.x>r.x && o.x-r.x<260 && Math.abs(o.y-r.y)<70);
+      if(r.cd<=0 && (r.danger>450 || (ahead && Math.random()<dt*2))) usePower(r,false);
+    }
+  }
+}
+function standings(){
+  const list=[{ ch:G.ch, race:G.dist+G.p.x+G.raceAdj, me:true }, ...G.rivals.map(r=>({ ch:r.ch, race:r.rd, me:false }))];
+  return list.sort((a,b)=>b.race-a.race);
+}
+
+/* ---------- Actualizar ---------- */
+function update(dt){
+  const L=LEVELS[G.lvl], p=G.p;
+  G.t+=dt;
+  const sp=G.dying>0?L.speed*.4:L.speed, dx=sp*dt;
+  G.dist+=dx; G.score+=dx*.02;
+  p.inv=Math.max(0,p.inv-dt); p.ghost=Math.max(0,p.ghost-dt); p.cd=Math.max(0,p.cd-dt);
+  G.shake=Math.max(0,G.shake-dt); G.flash=Math.max(0,G.flash-dt);
+  G.raceVis+=(G.raceAdj-G.raceVis)*Math.min(1,dt*3);
+
+  if(G.dying>0){
+    p.vy+=700*dt; p.y+=p.vy*dt; p.x+=40*dt;
+    G.dying-=dt; if(G.dying<=0){ endGame(false); return; }
+  } else {
+    let ix=0, iy=0;
+    if(keys.ArrowLeft||keys.KeyA) ix-=1; if(keys.ArrowRight||keys.KeyD) ix+=1;
+    if(keys.ArrowUp||keys.KeyW) iy-=1; if(keys.ArrowDown||keys.KeyS) iy+=1;
+    const ms=360;
+    p.vx+=(ix*ms-p.vx)*Math.min(1,dt*12); p.vy+=(iy*ms-p.vy)*Math.min(1,dt*12);
+    p.x+=p.vx*dt; p.y+=p.vy*dt;
+    if(drag){ p.x+=drag.dx*1.15; p.y+=drag.dy*1.15; drag.dx=0; drag.dy=0; }
+    if(p.charge>0){ p.charge-=dt; p.x+=260*dt; G.raceAdj+=200*dt; }
+    p.x=clamp(p.x,80,W*.66); p.y=clamp(p.y,62,H-L.groundH-24);
+    if((pedidoPoder||keys.Space||keys.KeyX||keys.KeyJ||fireHeld) && p.cd<=0) usePower(p,true);
+    pedidoPoder=false;
+    collideActor(p,'p',true);
+  }
+
+  G.nextSpawn-=dx;
+  if(G.nextSpawn<=0 && G.dist<L.len-800){ spawn(); G.nextSpawn=rand(L.gap*.8,L.gap*1.2); }
+
+  updateRivals(dt,L);
+
+  // escupidas
+  for(const s of G.shots){
+    s.x+=s.vx*dt; s.life-=dt;
+    if(Math.random()<.5) G.parts.push({x:s.x,y:s.y,vx:rand(-60,0),vy:rand(-20,20),life:.25,max:.25,size:rand(2,4),c:'#e9f0dc',grav:200});
+    for(const o of G.objs) if(!o.dead && rompible(o) && dist2(s.x,s.y,o.x,o.y)<((o.r||20)+10)**2){ smash(o,s.mine); s.life=0; break; }
+  }
+  // viento patagónico
+  for(const f of G.fx){
+    f.x+=720*dt; f.life-=dt*.9;
+    for(const o of G.objs) if(!o.dead && rompible(o) && Math.abs(o.x-f.x)<50 && Math.abs(o.y-f.y)<140) smash(o,f.mine);
+  }
+
+  // objetos
+  for(const o of G.objs){
+    o.x-=dx;
+    if(o.frozen){ o.frozen-=dt; if(o.frozen<=0){ o.frozen=.001; smash(o,o.mine); } continue; }
+    if(o.t==='rock'){ o.rot+=o.vr*dt; o.y=o.y0+Math.sin(G.t*1.6+o.bob)*o.amp; }
+    else if(o.t==='bird'){ o.x-=o.vx*dt; o.y=o.y0+Math.sin(G.t*2.5+o.ph)*30; }
+    else if(o.t==='ring'){
+      if(o.amp) o.cy=o.cy0+Math.sin(G.t*1.8+o.ph)*o.amp;
+      if(!o.passed && p.x+8>o.x){ o.passed=true; const dy=Math.abs(p.y-2-o.cy);
+        if(dy<o.ry-18 && G.dying<=0){ G.score+=100; G.rings++; SFX.ring(); pop(o.x,o.cy-o.ry-14,'¡Aro! +100','#ff9a4a'); burst(o.x,o.cy,14,['#ff6a2b','#ffd34a'],180,0); } }
+      if(Math.random()<.5){ const a=Math.random()*Math.PI*2; G.parts.push({x:o.x+Math.cos(a)*o.rx,y:o.cy+Math.sin(a)*o.ry,vx:-20,vy:rand(-70,-20),life:.35,max:.35,size:rand(3,6),c:Math.random()<.5?'#ff6a2b':'#ffd34a',grav:-40}); }
+    } else if(o.t==='bomb'){
+      if(o.state==='idle' && o.x-p.x<470 && o.x>p.x-60){ o.state='fuse'; o.fuse=.55; tone(900,.08,'square',.05); }
+      if(o.state==='fuse'){ o.fuse-=dt; if(o.fuse<=0) explode(o); }
+      if(o.state==='boom'){
+        o.boomT+=dt; o.br=Math.min(165,o.boomT*230);
+        if(Math.random()<.9){ const a=Math.random()*Math.PI*2; G.parts.push({x:o.x+Math.cos(a)*o.br,y:o.y+Math.sin(a)*o.br,vx:Math.cos(a)*60,vy:Math.sin(a)*60-30,life:.4,max:.4,size:rand(4,8),c:Math.random()<.5?'#ff6a2b':'#ffd34a',grav:-30}); }
+        if(o.boomT>1) o.dead=true;
+      }
+    }
+  }
+  G.objs=G.objs.filter(o=>!o.dead && o.x>-260);
+  G.shots=G.shots.filter(s=>s.life>0 && s.x<W+60);
+  G.fx=G.fx.filter(f=>f.life>0 && f.x<W+120);
+  for(const q of G.parts){ q.x+=q.vx*dt-dx*.3; q.y+=q.vy*dt; q.vy+=q.grav*dt; q.life-=dt; }
+  G.parts=G.parts.filter(q=>q.life>0);
+  for(const q of G.pops){ q.y-=40*dt; q.life-=dt; }
+  G.pops=G.pops.filter(q=>q.life>0);
+
+  if(G.dying<=0 && G.dist>=L.len) levelClear();
+}
+function explode(o){ o.state='boom'; o.boomT=0; o.br=0; SFX.boom(); G.shake=Math.max(G.shake,.25); burst(o.x,o.y,26,['#ff6a2b','#ffd34a','#3a2a28'],260,120); }
+function dist2(a,b,c,d){ return (a-c)**2+(b-d)**2; }
+function circRect(cx,cy,r,x,y,w,h){ const nx=clamp(cx,x,x+w), ny=clamp(cy,y,y+h); return (cx-nx)**2+(cy-ny)**2<r*r; }
+
+/* ---------- Fin de pantalla ---------- */
+const PREMIO_PUESTO=[500,300,150,50,0];
+function levelClear(){
+  const st=standings(), place=st.findIndex(s=>s.me)+1;
+  const llegada=500, porPuesto=PREMIO_PUESTO[place-1];
+  G.score+=llegada+porPuesto;
+  const ganoVida=G.lives<MAX_VIDAS; if(ganoVida) G.lives++;
+  SFX.clear();
+  const last=G.lvl===LEVELS.length-1, L=LEVELS[G.lvl], h=siguienteHistoria(G.lvl);
+  G.historia=h;
+  $('#clEyebrow').textContent=`Pantalla ${G.lvl+1} de 5 · ${L.nom}`;
+  $('#clTitulo').textContent=last?'¡Llegaste a la última pantalla!':`¡Pantalla ${G.lvl+1} superada!`;
+  $('#clPuesto').textContent=place===1?'¡Llegaste primero!':`Llegaste ${place}º de 5`;
+  $('#clPodio').innerHTML=st.map((s,i)=>`<li class="${s.me?'yo':''}">${i+1}º ${s.ch.nom}</li>`).join('');
+  $('#clDatos').innerHTML=
+    `<span>Alfajores</span><span>${G.coins}</span>`+
+    `<span>Aros de fuego</span><span>${G.rings}</span>`+
+    `<span>Cosas rotas</span><span>${G.smashed}</span>`+
+    `<span>Premio por llegar</span><span>+${llegada}</span>`+
+    `<span>Premio por el puesto</span><span>+${porPuesto}</span>`+
+    `<span>Vida extra</span><span class="vida">${ganoVida?`+1 (tenés ${G.lives})`:`ya tenés ${MAX_VIDAS}, el máximo`}</span>`;
+  $('#clTotal').textContent=Math.floor(G.score)+' pts';
+  $('#hEyebrow').textContent=`Historia de ${L.nom.toLowerCase()} · ${h.num} de ${h.total}`;
+  $('#hTitulo').textContent=h.titulo;
+  $('#hTexto').textContent=h.texto;
+  $('#bEscuchar').hidden=!HAY_VOZ;
+  $('#bSeguir').textContent=last?'Ver el resultado final':`Seguir a ${LEVELS[G.lvl+1].nom}`;
+  setState('clear');
+  setTimeout(()=>$('#bSeguir').focus(),50);
+  if(!muted) narrar(h);
+}
+function endGame(win){
+  callar();
+  const sc=Math.floor(G.score), nuevo=sc>record;
+  if(nuevo){ record=sc; try{ localStorage.setItem('dragones-record',String(sc)); }catch(e){} }
+  $('#finEyebrow').textContent=win?'¡Pasaste las 5 pantallas!':`Pantalla ${G.lvl+1} de 5 · ${LEVELS[G.lvl].nom}`;
+  $('#finTitulo').textContent=win?`¡Ganaste, ${G.ch.nom}!`:'Se terminaron las vidas';
+  $('#finSub').textContent=win?'Cruzaste toda la Patagonia: montañas, lagos, bosques, rutas y desiertos.':`Llegaste hasta ${LEVELS[G.lvl].lugar.split(' · ')[0]}. ¡Probá de nuevo!`;
+  $('#finTotal').textContent=sc+' pts';
+  $('#finRecord').textContent=nuevo?'¡Nuevo récord!':`Récord: ${record} pts`;
+  setState(win?'win':'over'); setTimeout(()=>$('#bOtra').focus(),50);
+}
+
+/* ---------- Dibujar ---------- */
+function drawActorFx(g,a,t){
+  if(a.charge>0){
+    g.strokeStyle='rgba(255,224,140,.85)'; g.lineWidth=3; g.lineCap='round';
+    for(let i=0;i<5;i++){ const yy=a.y-30+i*14, ln=30+((t*400+i*37)%40); g.beginPath(); g.moveTo(a.x-60-ln,yy); g.lineTo(a.x-60,yy); g.stroke(); }
+    ell(g,a.x+20,a.y-6,70,38,'rgba(255,214,120,.18)');
+  }
+}
+function drawTag(g,r){
+  const txt=r.ch.nom; g.font=`13px ${FONT}`; const w=g.measureText(txt).width+12;
+  rr(g,r.x-w/2+6,r.y-66,w,18,3,r.ch.dark);
+  g.fillStyle='#fff'; g.textAlign='center'; g.fillText(txt,r.x+6,r.y-52);
+}
+function drawEdge(g,r){
+  const left=r.x<0, ex=left?14:W-14, y=clamp(r.y,70,H-40);
+  g.fillStyle=r.ch.dragon;
+  if(left) tri(g,ex-8,y,ex+6,y-9,ex+6,y+9); else tri(g,ex+8,y,ex-6,y-9,ex-6,y+9);
+  outlined(g,r.ch.nom,left?ex+12:ex-12,y+5,14,'#fff',left?'left':'right');
+}
+function render(dt){
+  ctx.save();
+  if(!G || state==='menu' || state==='select'){
+    attractOff+=dt*200;
+    const li=Math.floor(T/7)%LEVELS.length;
+    drawBG(ctx,LEVELS[li],attractOff,T);
+    drawRig(ctx,CHARS[state==='select'?chosen:0],W*.4,H*.52+Math.sin(T*2)*16,T,1.7);
+    ctx.restore(); return;
+  }
+  const L=LEVELS[G.lvl], p=G.p;
+  if(G.shake>0) ctx.translate(rand(-9,9)*G.shake,rand(-9,9)*G.shake);
+  drawBG(ctx,L,G.dist,G.t);
+  for(const o of G.objs){
+    if(o.t==='col') column(ctx,o,L);
+    else if(o.t==='rock') drawRock(ctx,o,L,G.t);
+    else if(o.t==='bird') drawBird(ctx,o,G.t);
+    else if(o.t==='coin') drawCoin(ctx,o,G.t);
+    else if(o.t==='bomb') drawBomb(ctx,o,G.t);
+    else if(o.t==='ring') drawRingHalf(ctx,o,false);
+    if(o.frozen) drawIce(ctx,o);
+  }
+  for(const r of G.rivals){
+    if(r.x<-60 || r.x>W+40) continue;
+    drawActorFx(ctx,r,G.t);
+    const a=r.ghost>0?.35:(r.inv>0 && Math.floor(G.t*14)%2===0?.4:1);
+    drawRig(ctx,r.ch,r.x,r.y,G.t+r.ph,.86,a);
+    drawTag(ctx,r);
+  }
+  drawActorFx(ctx,p,G.t);
+  const blink=p.inv>0 && Math.floor(G.t*14)%2===0;
+  drawRig(ctx,G.ch,p.x,p.y,G.t,1,p.ghost>0?.35:(blink?.4:1));
+  for(const o of G.objs) if(o.t==='ring') drawRingHalf(ctx,o,true);
+  for(const s of G.shots){ ell(ctx,s.x,s.y,9,6,'#eef4e2'); ell(ctx,s.x+2,s.y-1,4,3,'#ffffff'); }
+  for(const f of G.fx){
+    ctx.save(); ctx.globalAlpha=clamp(f.life,0,1)*.9; ctx.lineCap='round';
+    for(const [col,lw] of [['rgba(40,70,110,.55)',8],['#ffffff',4]]){
+      ctx.strokeStyle=col; ctx.lineWidth=lw;
+      for(let i=-3;i<=3;i++){ const yy=f.y+i*40; ctx.beginPath(); ctx.moveTo(f.x-90,yy+8); ctx.quadraticCurveTo(f.x-30,yy-16,f.x+14,yy+(i%2?6:-6)); ctx.stroke(); }
+    }
+    ctx.restore();
+  }
+  for(const q of G.parts){ ctx.globalAlpha=clamp(q.life/q.max,0,1); ctx.fillStyle=q.c; ctx.fillRect(q.x-q.size/2,q.y-q.size/2,q.size,q.size); }
+  ctx.globalAlpha=1;
+  for(const q of G.pops){ ctx.globalAlpha=clamp(q.life*1.5,0,1); outlined(ctx,q.txt,q.x,q.y,20,q.c,'center'); }
+  ctx.globalAlpha=1;
+  for(const r of G.rivals) if(r.x<-60 || r.x>W+40) drawEdge(ctx,r);
+  if(G.flash>0){ ctx.fillStyle=`rgba(200,236,255,${G.flash*.9})`; ctx.fillRect(-20,-20,W+40,H+40); }
+  ctx.restore();
+  drawHUD(ctx,L);
+}
+function drawHUD(g,L){
+  const n=Math.max(3,G.lives);
+  for(let i=0;i<n;i++) heart(g,30+i*34,16,12,i<G.lives?'#ff4d5e':'rgba(255,255,255,.28)');
+  const st=standings(), place=st.findIndex(s=>s.me)+1;
+  outlined(g,`Puesto ${place}º de 5`,18,68,20,place===1?'#f6b40e':'#fff');
+  const bw=320, bx=W/2-bw/2, by=34, base=G.p.x+G.raceAdj, prog=clamp(G.dist/L.len,0,1);
+  outlined(g,`Pantalla ${G.lvl+1}/5 · ${L.nom}`,W/2,24,18,'#fff','center');
+  rr(g,bx,by,bw,10,3,'rgba(10,16,28,.5)');
+  rr(g,bx,by,Math.max(8,bw*prog),10,3,'#74acdf');
+  for(let i=1;i<5;i++){ g.fillStyle='rgba(255,255,255,.25)'; g.fillRect(bx+bw*i/5,by,1,10); }
+  for(const r of G.rivals){ const rp=clamp((r.rd-base)/L.len,0,1); ell(g,bx+bw*rp,by+5,5,5,r.ch.dragon); }
+  ell(g,bx+bw*prog,by+5,7,7,'#f6b40e');
+  outlined(g,String(Math.floor(G.score)),W-22,38,32,'#fff','right');
+  outlined(g,'puntos',W-22,56,14,'#f2efe6','right');
+  const mx=22, my=H-22, carga=1-G.p.cd/G.ch.cd, listo=G.p.cd<=0;
+  rr(g,mx,my-8,150,10,3,'rgba(10,16,28,.5)');
+  rr(g,mx,my-8,Math.max(6,150*carga),10,3,listo?'#ff6a2b':'#a8603d');
+  outlined(g,listo?`${G.ch.pnom.toUpperCase()} · ESPACIO`:G.ch.pnom,mx,my-14,13,listo?'#ffd34a':'#d8d0c0');
+  if(G.dist<1100){
+    const a=clamp(G.dist<200?G.dist/200:(1100-G.dist)/300,0,1);
+    g.globalAlpha=a;
+    outlined(g,`Pantalla ${G.lvl+1}`,W/2,H/2-40,26,'#74acdf','center');
+    outlined(g,L.nom,W/2,H/2+14,62,'#f6b40e','center');
+    outlined(g,L.lugar,W/2,H/2+46,18,'#fff','center');
+    g.globalAlpha=1;
+  }
+}
+
+/* ---------- Tarjetas de personajes ---------- */
+const previews=[];
+function buildCards(){
+  const wrap=$('#cards');
+  CHARS.forEach((ch,i)=>{
+    const b=document.createElement('button'); b.className='card'; b.id='card-'+ch.id; b.type='button';
+    const c=document.createElement('canvas'); c.width=300; c.height=200;
+    b.appendChild(c);
+    b.insertAdjacentHTML('beforeend',`<span class="nom">${ch.nom}${ch.hero?'<span class="tag">Protagonista</span>':''}</span><span class="ani">${ch.ani}</span><span class="perk"><b>${ch.pnom}.</b> ${ch.pdesc}</span>`);
+    b.addEventListener('mouseenter',()=>{ chosen=i; markSel(); });
+    b.addEventListener('focus',()=>{ chosen=i; markSel(); });
+    b.addEventListener('click',()=>{ audio(); newGame(i); });
+    wrap.appendChild(b); previews.push({c,g:c.getContext('2d'),ch,i});
+  });
+}
+function markSel(){ previews.forEach(p=>p.c.parentElement.classList.toggle('sel',p.i===chosen)); }
+function drawPreviews(){
+  for(const p of previews){
+    const g=p.g, L=LEVELS[p.i];
+    const sky=g.createLinearGradient(0,0,0,200); sky.addColorStop(0,L.sky[0]); sky.addColorStop(1,L.sky[2]);
+    g.fillStyle=sky; g.fillRect(0,0,300,200);
+    g.fillStyle=L.mid||'#555'; g.beginPath(); g.moveTo(0,200); g.lineTo(0,160); g.lineTo(70,120); g.lineTo(130,165); g.lineTo(210,110); g.lineTo(300,160); g.lineTo(300,200); g.fill();
+    drawRig(g,p.ch,140,112+Math.sin(T*2+p.i)*6,T+p.i*.3,1.55);
+  }
+}
+
+/* ---------- Bucle ---------- */
+function resize(){
+  const r=$('#stage').getBoundingClientRect();
+  const s=Math.min(r.width/W,r.height/H), dpr=Math.min(2,window.devicePixelRatio||1);
+  cv.style.width=Math.floor(W*s)+'px'; cv.style.height=Math.floor(H*s)+'px';
+  cv.width=Math.round(W*s*dpr); cv.height=Math.round(H*s*dpr);
+  ctx.setTransform(cv.width/W,0,0,cv.height/H,0,0);
+}
+let last=performance.now();
+function frame(now){
+  const dt=clamp((now-last)/1000,0,.033); last=now; T+=dt;
+  if(state==='play') update(dt);
+  render(dt);
+  if(state==='select') drawPreviews();
+  requestAnimationFrame(frame);
+}
+
+/* ---------- Controles ---------- */
+const GAME_KEYS=['ArrowUp','ArrowDown','ArrowLeft','ArrowRight','Space','KeyW','KeyA','KeyS','KeyD','KeyX','KeyJ'];
+addEventListener('keydown',e=>{
+  if(state==='play' && GAME_KEYS.includes(e.code)) e.preventDefault();
+  keys[e.code]=true; audio();
+  if(state==='play' && (e.code==='Space'||e.code==='KeyX'||e.code==='KeyJ')) pedidoPoder=true;
+  if((e.code==='KeyP'||e.code==='Escape') && state==='play'){ setState('paused'); return; }
+  if((e.code==='KeyP'||e.code==='Escape') && state==='paused'){ setState('play'); return; }
+  if(e.code==='KeyM') toggleMute();
+  if(state==='select' && (e.code==='ArrowRight'||e.code==='ArrowLeft')){ chosen=(chosen+(e.code==='ArrowRight'?1:4))%5; previews[chosen].c.parentElement.focus(); }
+});
+addEventListener('keyup',e=>{ keys[e.code]=false; if(state==='play' && GAME_KEYS.includes(e.code)) e.preventDefault(); });
+addEventListener('blur',()=>{ for(const k in keys) keys[k]=false; if(state==='play') setState('paused'); });
+cv.addEventListener('pointerdown',e=>{ audio(); if(state!=='play') return; cv.setPointerCapture(e.pointerId); drag={lx:e.clientX,ly:e.clientY,dx:0,dy:0}; });
+cv.addEventListener('pointermove',e=>{ if(!drag) return; const r=cv.getBoundingClientRect(), k=W/r.width; drag.dx+=(e.clientX-drag.lx)*k; drag.dy+=(e.clientY-drag.ly)*k; drag.lx=e.clientX; drag.ly=e.clientY; });
+const endDrag=()=>{ drag=null; };
+cv.addEventListener('pointerup',endDrag); cv.addEventListener('pointercancel',endDrag);
+const fb=$('#fireBtn');
+fb.addEventListener('pointerdown',e=>{ e.preventDefault(); audio(); fireHeld=true; pedidoPoder=true; });
+fb.addEventListener('pointerup',()=>fireHeld=false); fb.addEventListener('pointerleave',()=>fireHeld=false); fb.addEventListener('pointercancel',()=>fireHeld=false);
+$('#pauseBtn').addEventListener('click',()=>{ if(state==='play') setState('paused'); });
+function toggleMute(){ muted=!muted; $('#muteBtn').textContent='Sonido: '+(muted?'no':'sí'); if(muted) callar(); }
+$('#muteBtn').addEventListener('click',()=>{ audio(); toggleMute(); });
+
+$('#bJugar').addEventListener('click',()=>{ audio(); setState('select'); setTimeout(()=>previews[0].c.parentElement.focus(),30); });
+$('#bVolver').addEventListener('click',()=>setState('menu'));
+$('#bSeguir').addEventListener('click',()=>{ audio(); callar(); if(G.lvl===LEVELS.length-1) endGame(true); else startLevel(G.lvl+1); });
+$('#bEscuchar').addEventListener('click',()=>{ if(hablando) callar(); else if(G && G.historia) narrar(G.historia); });
+$('#bReanudar').addEventListener('click',()=>setState('play'));
+$('#bSalir').addEventListener('click',()=>{ G=null; setState('menu'); });
+$('#bOtra').addEventListener('click',()=>{ audio(); newGame(chosen); });
+$('#bCambiar').addEventListener('click',()=>{ setState('select'); setTimeout(()=>previews[chosen].c.parentElement.focus(),30); });
+
+buildCards(); markSel();addEventListener('resize',resize); resize();
+setState('menu');
+requestAnimationFrame(frame);
+})();
+</script>
