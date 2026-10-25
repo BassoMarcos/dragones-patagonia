@@ -6,6 +6,10 @@
 <meta name="theme-color" content="#141c2b">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Dragones">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -1080,8 +1084,13 @@ $('#bSalir').addEventListener('click',()=>{ G=null; setState('menu'); });
 $('#bOtra').addEventListener('click',()=>{ audio(); newGame(chosen); });
 $('#bCambiar').addEventListener('click',()=>{ setState('select'); setTimeout(()=>previews[chosen].c.parentElement.focus(),30); });
 
-buildCards(); markSel();addEventListener('resize',resize); resize();
+buildCards(); markSel();
+addEventListener('resize',resize); resize();
 setState('menu');
 requestAnimationFrame(frame);
+// App instalable: guarda el juego en el celu para que abra sin internet (solo en GitHub Pages y en local)
+if('serviceWorker' in navigator && /(\.github\.io|^localhost)$/.test(location.hostname)){
+  navigator.serviceWorker.register('sw.js').catch(()=>{});
+}
 })();
 </script>
